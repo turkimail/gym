@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>حديد — مدرب التمارين</title>
+<title>حديد — تمارين وتغذية</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="حديد">
@@ -51,8 +51,8 @@ header{background:var(--ink);color:#fff;padding:14px 0 0}
 
 /* nav */
 nav{position:fixed;bottom:0;right:0;left:0;background:var(--paper);border-top:1px solid var(--line);z-index:40}
-.navin{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
-nav button{background:none;border:0;padding:12px 4px 18px;color:var(--steel);font-size:13px;font-weight:500;border-top:3px solid transparent;margin-top:-1px}
+.navin{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+nav button{background:none;border:0;padding:12px 2px 18px;color:var(--steel);font-size:12px;font-weight:500;border-top:3px solid transparent;margin-top:-1px}
 nav button.on{color:var(--ink);border-top-color:var(--blue);font-weight:700}
 
 /* blocks */
@@ -198,6 +198,7 @@ th{color:var(--steel);font-weight:600;font-size:13px}
   <div class="navin">
     <button data-t="today" class="on">اليوم</button>
     <button data-t="program">البرنامج</button>
+    <button data-t="meals">الأكل</button>
     <button data-t="progress">التقدم</button>
     <button data-t="settings">الإعدادات</button>
   </div>
@@ -803,7 +804,7 @@ async function exportData(){
 }
 async function wipe(){
   if(!confirm('بيتحذف البرنامج وكل السجلات. متأكد؟'))return;
-  S={config:null,program:null,logs:{},session:null};
+  S={config:null,program:null,logs:{},session:null,diet:S.diet};
   try{await window.storage.delete(KEY);}catch(e){}
   try{localStorage.removeItem(KEY);}catch(e){}
   step=0;render();
@@ -815,7 +816,8 @@ function render(){
   if(!S.config||!S.program){nav.classList.add('hidden');app.innerHTML=setupView();$('hdInfo').textContent='';window.scrollTo(0,0);return;}
   nav.classList.remove('hidden');
   $('hdInfo').textContent=GOALS[S.config.goal].n+' · '+S.config.days+' أيام';
-  app.innerHTML={today:todayView,program:programView,progress:progressView,settings:settingsView}[tab]();
+  app.innerHTML={today:todayView,program:programView,meals:dietView,progress:progressView,settings:settingsView}[tab]();
+  if(tab!=='meals'&&typeof dtClose==='function')dtClose();
   [...nav.querySelectorAll('button')].forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
 }
 $('nav').addEventListener('click',e=>{
@@ -823,7 +825,495 @@ $('nav').addEventListener('click',e=>{
   if(S.session&&b.dataset.t!=='today'&&!confirm('عندك حصة شغالة. تطلع منها؟ (بتنحفظ كمسودة)'))return;
   tab=b.dataset.t; render(); window.scrollTo(0,0);
 });
-(async()=>{await load(); if(S.config&&!S.program)S.program=build(S.config); render();})();
+(async()=>{await load(); if(typeof dietBoot==='function')await dietBoot(); if(S.config&&!S.program)S.program=build(S.config); render();})();
+</script>
+
+<script>
+(function(){
+const TAGS=[["gluten","جلوتين / قمح"],["dairy","ألبان وأجبان"],["eggs","بيض"],["nuts","مكسرات"],
+["seafood","أسماك وبحريات"],["chicken","دجاج"],["red","لحوم حمراء"],["legumes","بقوليات"],
+["rice","رز"],["spicy","حار / بهارات قوية"],["honey","عسل وسكريات"],["onion","بصل وثوم"]];
+const R=(id,m,n,k,p,c,f,t,d,ex,ing,st)=>({id,m,n,k,p,c,f,t,d,ex,ing,st});
+
+const BASE=[
+/* ===== فطور ===== */
+R("b1",["breakfast"],"شكشوكة بيض بالطماطم",320,22,14,19,15,"بيض مطبوخ في صلصة طماطم طازجة، بروتين عالي ومقلاة وحدة.",["eggs","onion"],["بيض 3 حبات","طماطم مبشورة حبتين","بصل نصف حبة","زيت زيتون ملعقة كبيرة","ملح وفلفل","بقدونس"],["سخّن الزيت وقلّب البصل دقيقتين.","أضف الطماطم 6 دقائق حتى تثخن.","اكسر البيض فوقها وغطّ 4 دقائق.","زيّن بالبقدونس."]),
+R("b2",["breakfast"],"أوتميل بالموز وزبدة الفول السوداني",420,16,55,15,8,"شوفان دافئ يعطي طاقة طويلة قبل يوم عمل.",["gluten","dairy","nuts"],["شوفان 50 جم","حليب قليل الدسم 200 مل","موز حبة","زبدة فول سوداني ملعقة","قرفة"],["اسلق الشوفان مع الحليب 5 دقائق.","أضف القرفة.","زيّن بالموز وزبدة الفول."]),
+R("b3",["breakfast"],"توست أفوكادو مع بيض مسلوق",380,20,30,21,10,"دهون صحية وبروتين يشبع لين الغداء.",["gluten","eggs"],["خبز أسمر شريحتين","أفوكادو نصف حبة","بيض مسلوق حبتين","ليمون","ملح وفلفل"],["اسلق البيض 8 دقائق.","اهرس الأفوكادو مع الليمون.","افرده على التوست وضع البيض."]),
+R("b4",["breakfast"],"لبنة بزيت الزيتون مع خبز أسمر",330,14,34,15,5,"فطور خفيف جاهز في أقل من 5 دقائق.",["dairy","gluten"],["لبنة 4 ملاعق","خبز أسمر صغير","زيت زيتون ملعقة صغيرة","زيتون 5 حبات","خيار وطماطم"],["افرد اللبنة في صحن.","أضف زيت الزيتون والزعتر.","قدّمها مع الخبز والخضار."]),
+R("b5",["breakfast"],"عجة الشوفان بالبيض والجبن",350,24,28,15,12,"بديل البان كيك بكربوهيدرات بطيئة.",["eggs","dairy","gluten"],["شوفان مطحون 30 جم","بيض حبتين","جبن قليل الدسم 30 جم","بيكنج بودر رشة"],["اخلط الشوفان مع البيض.","اسكبه في مقلاة غير لاصقة.","أضف الجبن واطوِ العجة."]),
+R("b6",["breakfast"],"فول مدمس بزيت الزيتون",300,16,38,10,10,"فطور شعبي مشبع وغني بالألياف.",["legumes","onion"],["فول علبة صغيرة","طماطم حبة","ليمون","زيت زيتون ملعقة","كمون"],["سخّن الفول مع قليل ماء.","اهرسه وأضف الليمون والكمون.","زيّن بالطماطم والزيت."]),
+R("b7",["breakfast","snack"],"سموذي بروتين بالتمر والحليب",310,26,34,6,4,"وجبة سائلة لأيام الاجتماعات المزدحمة.",["dairy"],["حليب 250 مل","بروتين باودر مكيال","تمر 3 حبات","ثلج"],["ضع الكل في الخلاط.","اخلط 40 ثانية.","اشربه مباشرة."]),
+R("b8",["breakfast"],"بيض بزيت الزيتون مع خضار سوتيه",290,21,10,19,12,"خيار قليل الكربوهيدرات لبداية اليوم.",["eggs"],["بيض 3 حبات","فلفل ألوان","كوسا نصف حبة","زيت زيتون ملعقة"],["قلّب الخضار 5 دقائق.","أضف البيض وقلّب.","قدّمه مع خيار."]),
+R("b9",["breakfast","snack"],"تشيا بودنغ بحليب اللوز والتوت",280,10,30,13,5,"يُحضّر بالليل ويكون جاهز الصباح.",["nuts"],["تشيا 3 ملاعق","حليب لوز 200 مل","توت نصف كوب","فانيلا"],["اخلط التشيا مع الحليب.","ضعه بالثلاجة 6 ساعات.","أضف التوت."]),
+R("b10",["breakfast"],"بان كيك الشوفان والموز",390,18,52,12,15,"حلو بدون سكر مضاف، مناسب لصباح الإجازة.",["gluten","eggs","dairy"],["شوفان 50 جم","موز حبة","بيض حبتين","حليب 60 مل","بيكنج بودر"],["اضرب المكونات في الخلاط.","اسكب أقراص صغيرة في مقلاة.","اقلبها بعد ظهور الفقاعات."]),
+R("b11",["breakfast"],"جبن قريش مع خبز أسمر وطماطم",300,24,32,7,5,"أعلى بروتين بأقل دهون في الفطور.",["dairy","gluten"],["جبن قريش 150 جم","خبز أسمر شريحتين","طماطم","زعتر","زيت زيتون قطرات"],["افرد الجبن على الخبز.","أضف الطماطم والزعتر."]),
+R("b12",["breakfast"],"بيض عيون مع خبز أسمر",340,19,32,15,10,"كلاسيكي وسريع.",["eggs","gluten"],["بيض حبتين","خبز أسمر رغيف","زيت زيتون ملعقة صغيرة","ملح وفلفل"],["سخّن المقلاة وأضف الزيت.","اكسر البيض واتركه 3 دقائق.","قدّمه مع الخبز."]),
+R("b13",["breakfast","snack"],"سلطة فواكه مع زبادي",260,14,40,4,5,"خفيف ومنعش لصباح حار.",["dairy"],["زبادي يوناني 150 جم","تفاح","فراولة","كيوي"],["قطّع الفواكه.","اخلطها مع الزبادي."]),
+R("b14",["breakfast"],"حمص بالطحينة مع خبز أسمر",380,14,44,17,5,"ألياف عالية وإشباع طويل.",["legumes","nuts","gluten"],["حمص بالطحينة 5 ملاعق","خبز أسمر","زيت زيتون","كمون","ليمون"],["افرد الحمص في صحن.","أضف الزيت والكمون.","قدّمه مع الخبز."]),
+R("b15",["breakfast","lunch"],"سندويش تونة بالخبز الأسمر",360,30,34,10,7,"بدون طبخ ومناسب للمكتب.",["seafood","gluten"],["تونة بالماء علبة","خبز أسمر شريحتين","خس وطماطم","زبادي ملعقة","خردل"],["اخلط التونة مع الزبادي والخردل.","ركّب السندويش مع الخضار."]),
+R("b16",["breakfast"],"عصيدة الكينوا بالحليب والقرفة",350,14,52,10,15,"بديل الشوفان لمن ما يتحمل الجلوتين.",["dairy"],["كينوا 50 جم","حليب 200 مل","قرفة","تمر حبتين"],["اطبخ الكينوا بالحليب 15 دقيقة.","أضف القرفة والتمر."]),
+R("b17",["breakfast"],"أومليت بالجبن والزعتر",320,24,6,22,8,"بروتين عالي وكربوهيدرات شبه صفر.",["eggs","dairy"],["بيض 3 حبات","جبن قليل الدسم 30 جم","زعتر أخضر","زيت رذاذ"],["اخفق البيض مع الزعتر.","اسكبه في المقلاة.","أضف الجبن واطوِه."]),
+R("b18",["breakfast"],"خبز أسمر بالأفوكادو والتونة",400,28,32,18,8,"وجبة متكاملة في 8 دقائق.",["gluten","seafood"],["خبز أسمر شريحتين","أفوكادو نصف حبة","تونة علبة","ليمون","فلفل أسود"],["اهرس الأفوكادو مع الليمون.","اخلطه مع التونة.","افرده على الخبز."]),
+R("b19",["breakfast"],"شوفان بارد بالزبادي والتوت",340,18,48,8,5,"تجهّزه بالليل وتاخذه معك الصباح.",["gluten","dairy"],["شوفان 40 جم","زبادي يوناني 150 جم","توت نصف كوب","عسل ملعقة صغيرة"],["اخلط الشوفان مع الزبادي.","ضعه بالثلاجة ليلة كاملة.","أضف التوت قبل الأكل."]),
+
+/* ===== غداء ===== */
+R("l1",["lunch"],"صدر دجاج مشوي مع رز بني وسلطة",520,45,52,13,30,"الوجبة المتوازنة الأساسية.",["chicken","rice"],["صدر دجاج 180 جم","رز بني كوب","خس وخيار وطماطم","زيت زيتون ملعقة صغيرة","ليمون وبهارات"],["تبّل الدجاج 20 دقيقة.","اشوِه 6 دقائق لكل جهة.","قدّمه مع الرز والسلطة."]),
+R("l2",["lunch"],"كبسة دجاج خفيفة بالرز البني",560,40,62,15,45,"نسخة أخف من الكبسة بزيت أقل.",["chicken","rice","spicy","onion"],["دجاج 200 جم","رز بني كوب","بصل","طماطم حبتين","بهارات كبسة","لومي"],["اسلق الدجاج مع البصل والبهارات.","اطبخ الرز بالمرق 35 دقيقة.","اشوِ الدجاج بالفرن 10 دقائق."]),
+R("l3",["lunch","dinner"],"هامور مشوي مع خضار الفرن",470,42,24,22,25,"سمك أبيض قليل الدهون مع خضار محمّرة.",["seafood"],["فيليه هامور 200 جم","بطاطس صغيرة","كوسا وفلفل","زيت زيتون ملعقة","ليمون وثوم"],["تبّل السمك.","رتّب الخضار وضع السمك فوقها.","اخبز 200 درجة لمدة 20 دقيقة."]),
+R("l4",["lunch"],"لحم بقري مشوي مع بطاطا حلوة",560,44,45,22,30,"حديد وبروتين عالي لأيام التمرين.",["red"],["ستيك 180 جم","بطاطا حلوة حبة","بروكلي كوب","زيت زيتون","فلفل أسود"],["تبّل اللحم.","اشوِه 4 دقائق لكل جهة وأرحه 5 دقائق.","اخبز البطاطا واسلق البروكلي."]),
+R("l5",["lunch","dinner"],"سلطة تونة بالحمص",430,34,34,17,10,"بدون طبخ، مناسبة للمكتب.",["seafood","legumes"],["تونة علبة","حمص مسلوق نصف كوب","خيار وطماطم","ليمون","زيت زيتون ملعقة"],["صفّ التونة.","اخلطها مع الحمص والخضار.","أضف الليمون والزيت."]),
+R("l6",["lunch"],"مكرونة قمح كامل بصدور الدجاج",540,42,60,13,25,"كربوهيدرات أبطأ وبروتين كافي.",["gluten","chicken"],["مكرونة قمح كامل 80 جم","صدر دجاج 160 جم","طماطم مهروسة كوب","ثوم","ريحان"],["اسلق المكرونة.","اقلِ الدجاج مع الثوم ثم الطماطم.","اخلط الصلصة مع المكرونة."]),
+R("l7",["lunch"],"عدس بني مع رز وسلطة خضراء",480,22,74,10,35,"نباتي مشبع واقتصادي.",["legumes","rice","onion"],["عدس بني كوب","رز بني نصف كوب","بصل","كمون وكزبرة","سلطة"],["اسلق العدس 25 دقيقة.","أضف الرز وأكمل الطبخ.","قدّمه مع السلطة."]),
+R("l8",["lunch","dinner"],"برجر دجاج بالخبز الأسمر",520,40,48,17,20,"بديل صحي للوجبات السريعة.",["chicken","gluten"],["دجاج مفروم 160 جم","خبز برجر أسمر","خس وطماطم","خردل","بهارات"],["شكّل القرص وتبّله.","اشوِه 5 دقائق لكل جهة.","ركّب البرجر."]),
+R("l9",["lunch"],"شاورما دجاج صحية على الصاج",500,43,44,16,25,"نفس الطعم بزيت أقل.",["chicken","gluten","dairy","onion"],["دجاج شرائح 180 جم","خبز صاج أسمر","زبادي 3 ملاعق","ثوم وليمون","بهارات شاورما"],["تبّل الدجاج ساعة.","اقلِه على نار عالية.","اخلط صلصة الزبادي ولفّها."]),
+R("l10",["lunch","dinner"],"ديك رومي مع كينوا وخضار",500,46,46,14,25,"بروتين خفيف وكينوا كاملة.",["onion"],["ديك رومي 180 جم","كينوا كوب","فلفل ألوان","زيت زيتون ملعقة"],["اطبخ الكينوا 15 دقيقة.","اشوِ الشرائح.","اخلط الكل مع الخضار."]),
+R("l11",["lunch"],"صيادية سمك بالرز البني",540,38,60,16,40,"طبق ساحلي بنكهة البصل المحمّر.",["seafood","rice","onion"],["فيليه سمك 180 جم","رز بني كوب","بصل حبتين","كمون","لوز محمص"],["حمّر البصل حتى يذهّب.","اطبخ الرز بمرق البصل.","اشوِ السمك وقدّمه فوق الرز."]),
+R("l12",["lunch"],"مندي دجاج خفيف",550,42,58,16,50,"نكهة المندي بدون دهون زائدة.",["chicken","rice","spicy"],["دجاج 200 جم","رز بسمتي بني كوب","بهارات مندي","فحم قطعة","لومي"],["تبّل الدجاج بالبهارات.","اخبزه فوق صينية الرز 40 دقيقة.","دخّنه بالفحم 3 دقائق."]),
+R("l13",["lunch"],"دجاج بالكاري مع رز بني",530,40,55,16,30,"طبق دافئ بنكهة قوية.",["chicken","rice","spicy","dairy","onion"],["دجاج 180 جم","رز بني كوب","كاري ملعقة","زبادي 3 ملاعق","بصل وثوم"],["قلّب البصل مع الكاري.","أضف الدجاج والزبادي واطبخ 20 دقيقة.","قدّمه مع الرز."]),
+R("l14",["lunch"],"فاهيتا دجاج مع خبز أسمر",510,42,44,17,25,"سريعة ومليانة خضار.",["chicken","gluten","onion","spicy"],["دجاج شرائح 180 جم","فلفل ألوان","بصل","خبز تورتيلا أسمر","بابريكا وكمون"],["تبّل الدجاج بالبهارات.","قلّبه مع الفلفل والبصل 8 دقائق.","لفّه بالخبز."]),
+R("l15",["lunch","dinner"],"سلطة كينوا بالحمص والخضار",450,18,60,15,20,"نباتية ومشبعة وتنفع باردة.",["legumes"],["كينوا كوب","حمص نصف كوب","خيار وطماطم","بقدونس","ليمون وزيت زيتون"],["اطبخ الكينوا وبرّدها.","اخلطها مع الحمص والخضار.","أضف الليمون والزيت."]),
+R("l16",["lunch"],"ديك رومي مع بطاطا مشوية",490,44,42,15,30,"بروتين نظيف وكربوهيدرات معتدلة.",[],["شرائح ديك رومي 180 جم","بطاطا حبة","بروكلي","زيت زيتون","بهارات"],["اخبز البطاطا 25 دقيقة.","اشوِ شرائح الديك الرومي.","قدّمهم مع البروكلي."]),
+R("l17",["lunch"],"كفتة لحم بالفرن مع خضار",520,40,26,28,35,"طبق عائلي بسعرات محسوبة.",["red","onion"],["لحم مفروم 180 جم","بصل","بقدونس","طماطم وبطاطس شرائح","بهارات"],["اعجن اللحم مع البصل والبقدونس.","افرده في صينية وغطّه بالخضار.","اخبز 200 درجة 30 دقيقة."]),
+R("l18",["lunch"],"مرقة خضار باللحم مع رز بني",540,38,58,16,45,"غداء بيت كامل ومتوازن.",["red","rice","onion"],["لحم مكعبات 160 جم","كوسا وجزر وبطاطس","معجون طماطم","بصل","رز بني كوب"],["اسلق اللحم مع البصل 40 دقيقة.","أضف الخضار والمعجون 20 دقيقة.","قدّمها مع الرز."]),
+R("l19",["lunch","dinner"],"فيليه سمك بالفرن مع بطاطس",480,38,42,17,30,"مقرمش بدون قلي.",["seafood"],["فيليه سمك 200 جم","بطاطس حبة","دقيق ذرة ملعقة","زيت زيتون","ليمون"],["غلّف السمك بدقيق الذرة.","رتّب البطاطس معه في الصينية.","اخبز 220 درجة 25 دقيقة."]),
+R("l20",["lunch","dinner"],"سلطة دجاج مشوي بالأفوكادو",460,40,18,26,20,"كربوهيدرات قليلة وإشباع عالي.",["chicken"],["دجاج مشوي 180 جم","أفوكادو نصف حبة","خس وطماطم","ليمون","زيت زيتون"],["اشوِ الدجاج وقطّعه.","اخلط الخضار والأفوكادو.","أضف الليمون والزيت."]),
+R("l21",["lunch"],"لازانيا خضار بالدجاج",530,40,48,18,45,"طبق ضيوف بنسخة أخف.",["chicken","gluten","dairy"],["شرائح لازانيا 4","دجاج مفروم 160 جم","صلصة طماطم","جبن موزاريلا 40 جم","كوسا شرائح"],["اطبخ الدجاج مع الصلصة.","رتّب الطبقات مع الكوسا.","اخبز 180 درجة 30 دقيقة."]),
+R("l22",["lunch"],"عدس بالكينوا وخضار مشوية",470,22,66,12,30,"نباتي عالي البروتين النباتي.",["legumes","onion"],["عدس نصف كوب","كينوا نصف كوب","باذنجان وفلفل","زيت زيتون","كمون"],["اسلق العدس والكينوا.","اشوِ الخضار بالفرن.","اخلط الكل مع الكمون والزيت."]),
+
+/* ===== عشاء ===== */
+R("d1",["dinner"],"سلطة سيزر بالدجاج بصوص خفيف",400,38,18,20,15,"عشاء خفيف بدون كربوهيدرات ثقيلة.",["chicken","dairy"],["دجاج مشوي 150 جم","خس روماني","زبادي يوناني 3 ملاعق","بارميزان ملعقة","خردل"],["اخلط صوص الزبادي.","قطّع الدجاج فوق الخس.","أضف الصوص والجبن."]),
+R("d2",["dinner"],"شوربة عدس مع خبز أسمر",350,18,50,8,30,"دافية وخفيفة على المعدة.",["legumes","gluten","onion"],["عدس أحمر كوب","بصل وجزر","كمون","ليمون","خبز أسمر"],["اسلق العدس مع الخضار 25 دقيقة.","اضربه بالخلاط.","أضف الكمون والليمون."]),
+R("d3",["dinner"],"سلمون مشوي مع بروكلي",430,36,12,27,20,"أوميغا 3 عالي لعشاء متأخر.",["seafood"],["سلمون 180 جم","بروكلي كوبين","ليمون","زيت زيتون","فلفل"],["تبّل السلمون.","اشوِه بالفرن 12 دقيقة.","اسلق البروكلي 5 دقائق."]),
+R("d4",["dinner"],"أومليت خضار بجبن قليل الدسم",330,26,12,20,12,"أسرع عشاء بروتيني.",["eggs","dairy"],["بيض 3 حبات","سبانخ","فطر","جبن 30 جم"],["قلّب السبانخ والفطر.","أضف البيض المخفوق.","ضع الجبن واطوِه."]),
+R("d5",["dinner"],"صدر دجاج مع خضار سوتيه",380,42,16,16,20,"كلاسيكي وقليل الكربوهيدرات.",["chicken"],["دجاج 180 جم","كوسا وجزر وفلفل","زيت زيتون","ثوم"],["اشوِ الدجاج.","قلّب الخضار مع الثوم.","قدّمهم مع ليمون."]),
+R("d6",["dinner"],"تبولة مع دجاج مشوي",360,32,28,13,20,"خضار كثيفة وبروتين خفيف.",["chicken","gluten"],["بقدونس باقتين","برغل 3 ملاعق","طماطم","دجاج 130 جم","ليمون وزيت"],["انقع البرغل 10 دقائق.","افرم البقدونس والطماطم.","قدّمها مع الدجاج."]),
+R("d7",["dinner","snack"],"زبادي يوناني مع خيار وتوست",300,26,26,9,5,"عشاء متأخر بدون ثقل.",["dairy","gluten"],["زبادي يوناني 200 جم","خيار","توست أسمر","نعناع"],["اخلط الزبادي مع الخيار والنعناع.","حمّص التوست."]),
+R("d8",["dinner"],"رول خس بالتونة",300,30,14,14,10,"بدون خبز وسريع جداً.",["seafood"],["تونة علبة","أوراق خس","زبادي ملعقتين","خردل","خيار وجزر"],["اخلط التونة مع الزبادي.","ضعها داخل ورقة الخس ولفّها."]),
+R("d9",["dinner"],"شوربة خضار مع كرات لحم",390,30,26,18,30,"دافية ومشبعة بسعرات معقولة.",["red","onion"],["لحم مفروم 130 جم","جزر وكوسا وبطاطس","بصل","معجون طماطم"],["شكّل كرات اللحم.","اسلق الخضار 15 دقيقة.","أضف الكرات واطبخ 12 دقيقة."]),
+R("d10",["dinner"],"شوربة دجاج بالخضار",320,32,20,10,30,"خفيفة ومناسبة لأيام البرد أو التعب.",["chicken","onion"],["صدر دجاج 150 جم","جزر وكرفس","بصل","مرق","بقدونس"],["اسلق الدجاج مع الخضار 25 دقيقة.","قطّع الدجاج وأعده للشوربة.","أضف البقدونس."]),
+R("d11",["dinner"],"سلطة يونانية بجبن الفيتا",340,14,18,24,10,"منعشة وسريعة بدون طبخ.",["dairy"],["خيار وطماطم","فلفل أخضر","جبن فيتا 60 جم","زيتون","زيت زيتون وأوريغانو"],["قطّع الخضار مكعبات.","أضف الجبن والزيتون.","رش الزيت والأوريغانو."]),
+R("d12",["dinner"],"روبيان مشوي مع خضار",350,38,14,15,20,"بروتين بحري خفيف وسريع.",["seafood"],["روبيان 200 جم","كوسا وفلفل","ثوم","ليمون","زيت زيتون"],["تبّل الروبيان بالثوم والليمون.","اشوِه 3 دقائق لكل جهة.","قدّمه مع الخضار السوتيه."]),
+R("d13",["dinner"],"صدور دجاج بالفرن مع بطاطا حلوة",420,40,32,12,35,"عشاء بعد التمرين.",["chicken"],["دجاج 180 جم","بطاطا حلوة حبة","بابريكا","زيت زيتون"],["تبّل الدجاج بالبابريكا.","ضعه مع البطاطا في صينية.","اخبز 200 درجة 30 دقيقة."]),
+R("d14",["dinner"],"كبدة دجاج مع سلطة",360,34,14,18,20,"حديد عالي وسعر اقتصادي.",["chicken","onion"],["كبدة دجاج 200 جم","بصل","ليمون","دبس رمان ملعقة","سلطة خضراء"],["نظّف الكبدة ونقّها بالليمون.","قلّبها مع البصل 8 دقائق.","أضف دبس الرمان."]),
+R("d15",["dinner"],"سلطة بيض بالأفوكادو",330,20,10,24,10,"دهون صحية وبروتين بدون طبخ طويل.",["eggs"],["بيض مسلوق 3 حبات","أفوكادو نصف حبة","خس","ليمون","فلفل أسود"],["قطّع البيض والأفوكادو.","اخلطهم مع الخس.","أضف الليمون والفلفل."]),
+R("d16",["dinner"],"توست بالجبن والديك الرومي",340,28,32,10,7,"عشاء خفيف في 7 دقائق.",["gluten","dairy"],["توست أسمر شريحتين","ديك رومي شرائح 80 جم","جبن قليل الدسم 30 جم","خس وطماطم"],["رتّب الشرائح على التوست.","سخّنه بالمحمصة دقيقتين.","أضف الخضار."]),
+R("d17",["dinner"],"شوربة الشوفان بالدجاج",340,28,34,8,25,"دافية ومريحة قبل النوم.",["gluten","chicken"],["شوفان 40 جم","صدر دجاج 130 جم","جزر","مرق","فلفل أسود"],["اسلق الدجاج وقطّعه.","أضف الشوفان والجزر واطبخ 12 دقيقة."]),
+R("d18",["dinner"],"خضار مشوية مع جبن حلوم",380,22,20,24,25,"نباتي بروتيني وطعم قوي.",["dairy"],["حلوم 90 جم","باذنجان وكوسا وفلفل","زيت زيتون","زعتر"],["اشوِ الخضار على الجريل.","اشوِ الحلوم دقيقتين لكل جهة.","قدّمهم مع الزعتر."]),
+R("d19",["dinner"],"برغل بالخضار مع زبادي",360,16,54,9,25,"كربوهيدرات معقدة لعشاء مبكر.",["gluten","dairy","onion"],["برغل خشن كوب","بصل وطماطم","معجون طماطم","زبادي 150 جم"],["حمّر البصل وأضف المعجون.","أضف البرغل والماء واطبخ 20 دقيقة.","قدّمه مع الزبادي."]),
+
+/* ===== سناك ===== */
+R("s1",["snack"],"زبادي يوناني مع عسل ومكسرات",220,18,20,8,3,"بروتين سريع بين الوجبات.",["dairy","nuts","honey"],["زبادي يوناني 150 جم","عسل ملعقة صغيرة","لوز 8 حبات"],["ضع الزبادي في وعاء.","أضف العسل والمكسرات."]),
+R("s2",["snack"],"تفاح مع زبدة فول سوداني",230,7,28,11,2,"يقلل الرغبة بالسكر.",["nuts"],["تفاح حبة","زبدة فول سوداني ملعقة"],["قطّع التفاح شرائح.","قدّمه مع الزبدة."]),
+R("s3",["snack"],"تمر مع لوز",180,5,28,7,1,"طاقة سريعة قبل التمرين.",["nuts","honey"],["تمر 3 حبات","لوز 10 حبات"],["احشِ التمر باللوز."]),
+R("s4",["snack"],"خضار مقطّع مع حمص بالطحينة",190,8,20,9,5,"ألياف عالية وإشباع طويل.",["legumes","nuts"],["جزر وخيار وفلفل","حمص بالطحينة 3 ملاعق","ليمون"],["قطّع الخضار أصابع.","قدّمها مع الحمص."]),
+R("s5",["snack"],"بيض مسلوق حبتين",155,13,1,11,10,"أرخص بروتين وأسهل تحضير.",["eggs"],["بيض حبتين","ملح وفلفل"],["اسلق البيض 8 دقائق.","برّده وقشّره."]),
+R("s6",["snack"],"شيك بروتين بالماء",130,25,4,2,2,"بعد التمرين مباشرة.",["dairy"],["بروتين باودر مكيال","ماء 300 مل"],["رجّه في الشيكر 20 ثانية."]),
+R("s7",["snack"],"فشار بدون زبدة",120,4,22,2,5,"حجم كبير وسعرات قليلة.",[],["ذرة فشار 25 جم","ملح رشة"],["فرقعه بالهواء الساخن.","أضف رشة ملح."]),
+R("s8",["snack"],"جبن قريش مع طماطم",160,20,8,5,3,"بروتين بطيء قبل النوم.",["dairy"],["جبن قريش 150 جم","طماطم","زعتر وزيت زيتون"],["ضع الجبن مع الطماطم.","رش الزعتر والزيت."]),
+R("s9",["snack"],"موز مع لوز",210,6,30,9,1,"قبل التمرين بنصف ساعة.",["nuts"],["موز حبة","لوز 12 حبة"],["كل الموز مع اللوز."]),
+R("s10",["snack"],"مخفوق زبادي بالفراولة",170,15,20,3,3,"حلو وخفيف بدون سكر مضاف.",["dairy"],["زبادي يوناني 150 جم","فراولة كوب","ثلج"],["اخلط الكل في الخلاط 30 ثانية."]),
+R("s11",["snack"],"حمص مسلوق متبل",180,9,24,6,5,"ألياف وبروتين نباتي.",["legumes"],["حمص مسلوق كوب","كمون","ليمون","زيت زيتون ملعقة صغيرة"],["سخّن الحمص.","أضف الكمون والليمون والزيت."]),
+R("s12",["snack"],"جبن مع تفاح",200,12,20,8,2,"مزيج بروتين وسكر طبيعي.",["dairy"],["جبن قليل الدسم 50 جم","تفاح حبة"],["قطّع التفاح والجبن وقدّمهم."]),
+R("s13",["snack"],"توست أسمر بزبدة اللوز",220,7,24,11,3,"سناك مسائي متوازن.",["gluten","nuts"],["توست أسمر شريحة","زبدة لوز ملعقة"],["حمّص التوست.","افرد زبدة اللوز."]),
+R("s14",["snack"],"تشيبس بطاطا حلوة بالفرن",180,3,30,6,25,"بديل الشيبس المقلي.",[],["بطاطا حلوة حبة","زيت زيتون ملعقة صغيرة","بابريكا"],["قطّعها شرائح رفيعة.","اخبزها 200 درجة 20 دقيقة."])
+];
+
+const SLOTS=[["breakfast","فطور",.25],["lunch","غداء",.35],["snack","سناك",.15],["dinner","عشاء",.25]];
+const MODS=[
+{id:"nooil",label:"بدون زيت",k:-80,f:-9,note:"اطبخها بمقلاة غير لاصقة أو رذاذ زيت."},
+{id:"small",label:"حصة أصغر ٢٥٪",scale:.75,note:"قلّل كل المقادير للثلاثة أرباع."},
+{id:"big",label:"حصة أكبر ٢٥٪",scale:1.25,note:"زد كل المقادير بمقدار الربع."},
+{id:"protein",label:"بروتين أعلى",k:60,p:12,f:1,note:"أضف 60 جم صدر دجاج أو بياض بيضتين."},
+{id:"lowcarb",label:"بدون نشويات",k:-140,c:-30,note:"استبدل النشويات بخضار ورقية."},
+{id:"quick",label:"تحضير أسرع",note:"استخدم مكونات جاهزة أو مسلوقة مسبقاً."},
+{id:"noonion",label:"بدون بصل وثوم",note:"احذف البصل والثوم وعوّضها بالليمون والأعشاب."}];
+/* ================= وحدة التغذية المدمجة ================= */
+const AR_D=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const AR_M=["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+const dhash=s=>{let h=2166136261;for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619);return h>>>0};
+const dk_=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const dfmt=d=>AR_D[d.getDay()]+" "+d.getDate()+" "+AR_M[d.getMonth()];
+const ytL=n=>"https://www.youtube.com/results?search_query="+encodeURIComponent("طريقة "+n);
+const giL=n=>"https://www.google.com/search?tbm=isch&q="+encodeURIComponent(n);
+const tagLabel=id=>(TAGS.find(t=>t[0]===id)||[,id])[1];
+
+let dDate=new Date(), dSub='day', dOpen=null, dMode='view';
+let dAiText='', dAiLoad=false, dAiErr='', dGen='', dGenErr='';
+
+const D=()=>S.diet;
+const ALLR=()=>BASE.concat(D().lib||[]);
+const byIdR=id=>ALLR().find(r=>r.id===id);
+
+/* ---- الأهداف ---- */
+function kcalBase(pf){
+  const bmr=pf.sex==='f'?10*pf.w+6.25*pf.h-5*pf.age-161:10*pf.w+6.25*pf.h-5*pf.age+5;
+  let t=bmr*({low:1.2,mid:1.45,high:1.7}[pf.act]||1.45);
+  if(pf.goal==='cut')t*=.8; if(pf.goal==='gain')t*=1.12;
+  return Math.max(pf.sex==='f'?1300:1600,Math.round(t/10)*10);
+}
+function isTrain(dk){
+  const o=(D().days[dk]||{})._tr;
+  if(o===0||o===1)return !!o;
+  return Object.values(S.logs||{}).some(l=>l.done&&l.date===dk);
+}
+const TRAIN_BONUS=250;
+function kcalTarget(dk){return kcalBase(D().pf)+(isTrain(dk)?TRAIN_BONUS:0)}
+function proTarget(){
+  const pf=D().pf, g={cut:2.0,gain:1.8,keep:1.6}[pf.goal]||1.7;
+  return Math.round(pf.w*g);
+}
+
+/* ---- الفلترة والخطة ---- */
+function okR(r){
+  const d=D();
+  if(r.ex.some(t=>d.excl.includes(t)))return false;
+  if(d.custom.length){const x=(r.n+" "+r.ing.join(" ")).toLowerCase();
+    if(d.custom.some(w=>w.trim()&&x.includes(w.trim().toLowerCase())))return false}
+  return true;
+}
+const poolR=slot=>ALLR().filter(r=>r.m.includes(slot)&&okR(r));
+function applyMods(r,mods){
+  let k=r.k,p=r.p,c=r.c,f=r.f;const notes=[];
+  (mods||[]).forEach(id=>{const m=MODS.find(x=>x.id===id);if(!m)return;
+    if(m.scale){k=Math.round(k*m.scale);p=Math.round(p*m.scale);c=Math.round(c*m.scale);f=Math.round(f*m.scale)}
+    else{k+=m.k||0;p+=m.p||0;c+=m.c||0;f+=m.f||0}
+    notes.push(m.note)});
+  return Object.assign({},r,{k:Math.max(60,k),p:Math.max(0,p),c:Math.max(0,c),f:Math.max(0,f),notes});
+}
+function plan(dk){
+  const d=D(), saved=d.days[dk]||{}, T=kcalTarget(dk), seed=saved._seed||0, tr=isTrain(dk);
+  const out={}, used=[];
+  SLOTS.forEach(([key,,share])=>{
+    const P=poolR(key), rec=saved[key]; let base=null;
+    if(rec&&rec.custom)base=rec.custom;
+    else if(rec&&rec.id)base=byIdR(rec.id);
+    if(!base||(!(rec&&rec.custom)&&!okR(base))){
+      if(!P.length){out[key]=null;return}
+      const sc=T*share;
+      let sorted;
+      if(tr&&key==='snack')sorted=P.slice().sort((a,b)=>b.p-a.p||Math.abs(a.k-sc)-Math.abs(b.k-sc));
+      else sorted=P.slice().sort((a,b)=>Math.abs(a.k-sc)-Math.abs(b.k-sc));
+      const top=sorted.slice(0,Math.min(6,sorted.length)).filter(r=>!used.includes(r.id));
+      const list=top.length?top:sorted;
+      base=list[dhash(dk+key+seed)%list.length];
+    }
+    used.push(base.id);
+    out[key]={r:applyMods(base,rec&&rec.mods),mods:(rec&&rec.mods)||[],done:!!(rec&&rec.done),cust:!!(rec&&rec.custom)};
+  });
+  return out;
+}
+
+/* ---- أفعال ---- */
+function dSet(slot,patch){
+  const dk=dk_(dDate), d=D();
+  d.days[dk]=d.days[dk]||{};
+  d.days[dk][slot]=Object.assign({},d.days[dk][slot]||{},patch);
+  save();render();
+}
+window.dtShift=n=>{const x=new Date(dDate);x.setDate(x.getDate()+n);dDate=x;render()};
+window.dtSub=s=>{dSub=s;render();window.scrollTo(0,0)};
+window.dtDone=s=>dSet(s,{done:!plan(dk_(dDate))[s].done});
+window.dtShuffle=()=>{const dk=dk_(dDate),d=D();const tr=(d.days[dk]||{})._tr;
+  d.days[dk]={_seed:((d.days[dk]||{})._seed||0)+1};if(tr===0||tr===1)d.days[dk]._tr=tr;save();render()};
+window.dtTrain=()=>{const dk=dk_(dDate),d=D();d.days[dk]=d.days[dk]||{};
+  d.days[dk]._tr=isTrain(dk)?0:1;save();render()};
+window.dtTag=id=>{const d=D();d.excl=d.excl.includes(id)?d.excl.filter(x=>x!==id):d.excl.concat(id);save();render()};
+window.dtAddC=()=>{const el=$('dcin'),w=(el.value||'').trim();if(!w)return;D().custom.push(w);save();render()};
+window.dtRmC=i=>{D().custom.splice(i,1);save();render()};
+window.dtDel=id=>{const d=D();d.lib=d.lib.filter(r=>r.id!==id);save();render()};
+window.dtPut=(slot,id)=>{dSet(slot,{id:id,mods:[],custom:null});dSub='day';render();window.scrollTo(0,0)};
+window.dtPF=(k,v)=>{const pf=D().pf;pf[k]=(k==='age'||k==='w'||k==='h')?(+v||0):v;pf.set=1;save();render()};
+window.dtSaveP=()=>{D().pf.set=1;save();render()};
+
+/* ---- الوزن ---- */
+window.dtLogW=()=>{const el=$('dwin'),v=parseFloat(el.value);
+  if(!v||v<30||v>300)return;
+  const d=D();d.weights[dk_(dDate)]=Math.round(v*10)/10;
+  const ks=Object.keys(d.weights).sort();d.pf.w=d.weights[ks[ks.length-1]];
+  save();render()};
+window.dtDelW=k=>{delete D().weights[k];save();render()};
+function wkStart(d){const x=new Date(d);x.setDate(x.getDate()-x.getDay());return dk_(x)}
+function wSeries(){
+  const g={},w=D().weights;
+  Object.keys(w).forEach(k=>{const s=wkStart(new Date(k+"T00:00:00"));(g[s]=g[s]||[]).push(w[k])});
+  return Object.keys(g).sort().map(s=>({w:s,v:Math.round(g[s].reduce((a,b)=>a+b,0)/g[s].length*10)/10,n:g[s].length}));
+}
+function volSeries(){
+  const g={};
+  Object.values(S.logs||{}).filter(l=>l.done).forEach(l=>{
+    const s=wkStart(new Date(l.ts));g[s]=(g[s]||0)+(typeof vol==='function'?vol(l):0)});
+  return g;
+}
+function lineChart(d,color,unit){
+  if(d.length<2)return '<div class="empty">سجّل وزنك في أسبوعين على الأقل عشان يظهر الرسم.</div>';
+  const a=d.slice(-8),W=320,H=150,p=30;
+  const vs=a.map(x=>x.v),mn=Math.min.apply(null,vs),mx=Math.max.apply(null,vs);
+  const lo=mn-Math.max(.5,(mx-mn)*.25),hi=mx+Math.max(.5,(mx-mn)*.25);
+  const X=i=>p+i*(W-p*2)/(a.length-1), Y=v=>H-24-((v-lo)/(hi-lo))*(H-48);
+  let g='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">';
+  g+='<polyline fill="none" stroke="'+color+'" stroke-width="2.5" stroke-linejoin="round" points="'+a.map((x,i)=>X(i)+','+Y(x.v)).join(' ')+'"/>';
+  a.forEach((x,i)=>{const dt=new Date(x.w+"T00:00:00");
+    g+='<circle cx="'+X(i)+'" cy="'+Y(x.v)+'" r="3.5" fill="'+color+'"/>'+
+       '<text x="'+X(i)+'" y="'+(Y(x.v)-9)+'" font-size="10" fill="#17202A" text-anchor="middle">'+x.v+'</text>'+
+       '<text x="'+X(i)+'" y="'+(H-6)+'" font-size="9" fill="#5E6871" text-anchor="middle">'+dt.getDate()+'/'+(dt.getMonth()+1)+'</text>'});
+  return g+'</svg>';
+}
+
+/* ---- الذكاء ---- */
+async function callAI(prompt){
+  const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:2000,messages:[{role:"user",content:prompt}]})});
+  const data=await res.json();
+  return JSON.parse(data.content.map(i=>i.type==='text'?i.text:'').join('').replace(/```json|```/g,'').trim());
+}
+const banned=()=>D().excl.map(tagLabel).concat(D().custom).join('، ')||'لا يوجد';
+window.dtAsk=async()=>{
+  const t=($('daiin').value||'').trim();if(!t)return;
+  dAiText=t;dAiLoad=true;dAiErr='';renderSheet();
+  const r=plan(dk_(dDate))[dOpen].r;
+  const p="أنت طاهي وأخصائي تغذية. عدّل هذه الوصفة حسب طلب المستخدم.\nالوصفة: "+
+    JSON.stringify({name:r.n,kcal:r.k,protein:r.p,carbs:r.c,fat:r.f,ingredients:r.ing,steps:r.st})+
+    "\nممنوع تماماً: "+banned()+"\nطلب المستخدم: "+t+
+    '\nأعد JSON فقط بدون أي نص أو markdown:\n{"n":"الاسم","d":"وصف بسطر","k":سعرات,"p":بروتين,"c":كربوهيدرات,"f":دهون,"t":دقائق,"ing":["مكون وكميته"],"st":["خطوة"]}';
+  try{const v=await callAI(p);
+    const rec={id:'ai-'+Date.now(),m:[dOpen],n:v.n,k:+v.k,p:+v.p,c:+v.c,f:+v.f,t:+v.t||15,d:v.d,ex:[],ing:v.ing,st:v.st};
+    dAiLoad=false;dAiText='';dMode='view';dSet(dOpen,{custom:rec,mods:[],id:null});renderSheet();
+  }catch(e){dAiLoad=false;dAiErr='ما نجح الطلب. تأكد من الاتصال أو استخدم خيارات التعديل الجاهزة.';renderSheet()}
+};
+window.dtGen=async slot=>{
+  dGen=slot;dGenErr='';render();if(dOpen)renderSheet();
+  const dk=dk_(dDate), share=SLOTS.find(s=>s[0]===slot)[2], sc=Math.round(kcalTarget(dk)*share);
+  const label=SLOTS.find(s=>s[0]===slot)[1];
+  const have=poolR(slot).map(r=>r.n).join('، ');
+  const p="أنت طاهي سعودي وأخصائي تغذية. اقترح 4 وصفات جديدة لوجبة "+label+" قريبة من "+sc+
+    " سعرة لكل وصفة (±60) ومرتفعة البروتين قدر الإمكان.\nممنوع تماماً استخدام: "+banned()+
+    "\nلا تكرر هذه الوصفات: "+have+
+    "\nنوّع بين مطبخ سعودي وخليجي وشامي وعالمي، بمكونات متوفرة في السوبرماركت السعودي."+
+    '\nأعد JSON فقط بدون أي نص أو markdown:\n[{"n":"الاسم","d":"وصف بسطر","k":سعرات,"p":بروتين,"c":كربوهيدرات,"f":دهون,"t":دقائق,"ing":["مكون وكميته"],"st":["خطوة"]}]';
+  try{const arr=await callAI(p), now=Date.now();
+    D().lib=(D().lib||[]).concat(arr.slice(0,4).map((v,i)=>({id:'gen-'+now+'-'+i,m:[slot],n:v.n,k:+v.k,p:+v.p,c:+v.c,f:+v.f,t:+v.t||20,d:v.d,ex:[],ing:v.ing,st:v.st,gen:1})));
+    dGen='';save();render();if(dOpen)renderSheet();
+  }catch(e){dGen='';dGenErr='ما نجح التوليد. يحتاج اتصال إنترنت.';render();if(dOpen)renderSheet()}
+};
+
+/* ---- الشيت ---- */
+window.dtOpen=(slot,mode)=>{dOpen=slot;dMode=mode||'view';dAiErr='';renderSheet()};
+window.dtClose=()=>{dOpen=null;const el=$('dsheet');if(el)el.remove()};
+window.dtMod=id=>{const it=plan(dk_(dDate))[dOpen];
+  const mods=it.mods.includes(id)?it.mods.filter(x=>x!==id):it.mods.concat(id);
+  const patch={mods};if(!it.cust)patch.id=it.r.id;
+  dSet(dOpen,patch);renderSheet()};
+window.dtPick=id=>{dSet(dOpen,{id:id,mods:[],custom:null});dMode='view';renderSheet()};
+
+function renderSheet(){
+  let el=$('dsheet');
+  if(!dOpen){if(el)el.remove();return}
+  const dk=dk_(dDate), it=plan(dk)[dOpen];
+  if(!it){if(el)el.remove();return}
+  if(!el){el=document.createElement('div');el.className='sheet';el.id='dsheet';
+    el.onclick=e=>{if(e.target===el)dtClose()};document.body.appendChild(el)}
+  const r=it.r, share=SLOTS.find(s=>s[0]===dOpen)[2], sc=Math.round(kcalTarget(dk)*share);
+  const P=poolR(dOpen).slice().sort((a,b)=>Math.abs(a.k-sc)-Math.abs(b.k-sc));
+  let h='<div class="sheet-in"><div class="between"><h3>'+esc(r.n)+'</h3>'+
+    '<button class="linkbtn" onclick="dtClose()">إغلاق</button></div>'+
+    '<div class="chips" style="margin:12px 0 16px">'+
+    '<button class="chip '+(dMode==='view'?'on':'')+'" onclick="dtOpen(\''+dOpen+'\',\'view\')">الوصفة</button>'+
+    '<button class="chip '+(dMode==='swap'?'on':'')+'" onclick="dtOpen(\''+dOpen+'\',\'swap\')">بدائل وتعديل</button></div>';
+  if(dMode==='view'){
+    h+='<p class="muted" style="margin:0 0 12px">'+esc(r.d)+'</p>'+
+      '<div class="grid2" style="grid-template-columns:repeat(4,1fr)">'+
+      [['سعرات',r.k],['بروتين',r.p],['كربو',r.c],['دهون',r.f]].map(x=>'<div class="stat" style="padding:10px;text-align:center"><b style="font-size:20px">'+x[1]+'</b><em>'+x[0]+'</em></div>').join('')+'</div>'+
+      '<div class="sec">المكونات</div><div class="card">'+r.ing.map(x=>'<div class="exrow"><div>'+esc(x)+'</div></div>').join('')+'</div>'+
+      '<div class="sec">الطريقة</div><div class="card"><ol class="cue">'+r.st.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol>'+
+      (r.notes&&r.notes.length?'<div class="err" style="border-right-color:var(--yellow);background:#FCF7E9">'+r.notes.map(n=>esc(n)).join('<br>')+'</div>':'')+'</div>'+
+      '<a class="vid" target="_blank" rel="noreferrer" href="'+ytL(r.n)+'">فيديو الطريقة</a>'+
+      '<a class="vid" style="background:var(--ink)" target="_blank" rel="noreferrer" href="'+giL(r.n)+'">صور الطبق</a>';
+  }else{
+    h+='<div class="sec" style="margin-top:0">عدّل نفس الوصفة</div><div class="chips">'+
+      MODS.map(m=>'<button class="chip '+(it.mods.includes(m.id)?'on':'')+'" onclick="dtMod(\''+m.id+'\')">'+m.label+'</button>').join('')+'</div>'+
+      '<div class="sec">اطلب تعديل بكلامك</div>'+
+      '<div class="row"><input id="daiin" value="'+esc(dAiText)+'" placeholder="مثال: بدون بصل وسريعة بـ10 دقايق" style="flex:1;border:1px solid var(--line);border-radius:var(--r);padding:12px;background:#FAFAF9">'+
+      '<button class="btn sm" onclick="dtAsk()"'+(dAiLoad?' disabled':'')+'>'+(dAiLoad?'…':'نفّذ')+'</button></div>'+
+      (dAiErr?'<div class="err">'+dAiErr+'</div>':'')+
+      '<div class="between" style="margin:24px 0 6px"><span class="sec" style="margin:0">بدائل لنفس الوجبة</span>'+
+      '<button class="chip" onclick="dtGen(\''+dOpen+'\')">'+(dGen===dOpen?'يولّد…':'+ وصفات جديدة')+'</button></div>'+
+      (dGenErr?'<div class="err">'+dGenErr+'</div>':'')+
+      '<p class="muted" style="margin:0 0 10px">مرتبة حسب قربها من '+sc+' سعرة.</p>'+
+      '<div class="opts">'+P.map(a=>'<button class="opt '+(a.id===r.id?'on':'')+'" onclick="dtPick(\''+a.id+'\')">'+
+      '<div style="flex:1"><b>'+esc(a.n)+'</b><em>'+a.t+' دقيقة · بروتين '+a.p+' جم'+(a.gen?' · جديدة':'')+'</em></div>'+
+      '<span class="muted">'+a.k+'</span></button>').join('')+'</div>';
+  }
+  el.innerHTML=h+'</div>';
+}
+
+/* ---- شاشة الأكل ---- */
+function pfForm(){
+  const pf=D().pf, n=(k,l,u)=>'<div style="flex:1"><div class="muted" style="font-size:13px">'+l+'</div>'+
+    '<div class="row"><input type="number" value="'+pf[k]+'" oninput="dtPF(\''+k+'\',this.value)" style="width:100%;border:1px solid var(--line);border-radius:var(--r);padding:10px;text-align:center;background:#FAFAF9"><span class="muted">'+u+'</span></div></div>';
+  return '<div class="chips" style="margin-bottom:10px">'+
+    [['m','ذكر'],['f','أنثى']].map(x=>'<button class="chip '+(pf.sex===x[0]?'on':'')+'" onclick="dtPF(\'sex\',\''+x[0]+'\')">'+x[1]+'</button>').join('')+'</div>'+
+    '<div class="row">'+n('age','العمر','سنة')+n('w','الوزن','كجم')+n('h','الطول','سم')+'</div>'+
+    '<div class="sec" style="margin:14px 0 6px">النشاط خارج التمرين</div><div class="chips">'+
+    [['low','مكتبي'],['mid','متوسط'],['high','عالي']].map(x=>'<button class="chip '+(pf.act===x[0]?'on':'')+'" onclick="dtPF(\'act\',\''+x[0]+'\')">'+x[1]+'</button>').join('')+'</div>'+
+    '<div class="sec" style="margin:14px 0 6px">هدف الأكل</div><div class="chips">'+
+    [['cut','نزول وزن'],['keep','ثبات'],['gain','زيادة عضل']].map(x=>'<button class="chip '+(pf.goal===x[0]?'on':'')+'" onclick="dtPF(\'goal\',\''+x[0]+'\')">'+x[1]+'</button>').join('')+'</div>';
+}
+
+window.dietView=function(){
+  const d=D(), pf=d.pf;
+  if(!pf.set){
+    return '<div class="hero" style="padding:22px 0 12px"><h1 style="font-size:30px">خطة أكلك</h1>'+
+      '<p>أكمل بياناتك عشان أحسب سعراتك وأربطها بأيام تمرينك.</p></div>'+
+      '<div class="card">'+pfForm()+'</div>'+
+      '<div class="card"><div class="between"><span class="muted">هدف السعرات في يوم الراحة</span><b style="font-size:24px">'+kcalBase(pf)+'</b></div>'+
+      '<div class="between" style="margin-top:8px"><span class="muted">يوم التمرين</span><b>'+(kcalBase(pf)+TRAIN_BONUS)+' سعرة</b></div></div>'+
+      '<button class="btn" onclick="dtSaveP()">ابدأ</button><div style="height:30px"></div>';
+  }
+  const dk=dk_(dDate), tr=isTrain(dk), T=kcalTarget(dk), PT=proTarget();
+  let h='<div class="between" style="padding:16px 0 10px">'+
+    '<button class="chip" onclick="dtShift(-1)">›</button>'+
+    '<div style="text-align:center"><b>'+dfmt(dDate)+'</b><div class="muted" style="font-size:12px">'+
+    (dk===dk_(new Date())?'اليوم':'يوم محفوظ')+'</div></div>'+
+    '<button class="chip" onclick="dtShift(1)">‹</button></div>'+
+    '<div class="chips" style="margin-bottom:12px">'+
+    '<button class="chip '+(dSub==='day'?'on':'')+'" onclick="dtSub(\'day\')">خطة اليوم</button>'+
+    '<button class="chip '+(dSub==='browse'?'on':'')+'" onclick="dtSub(\'browse\')">كل الوصفات</button>'+
+    '<button class="chip '+(tr?'on':'')+'" onclick="dtTrain()">'+(tr?'يوم تمرين ✓':'يوم راحة')+'</button></div>';
+
+  if(dSub==='browse'){
+    if(dGenErr)h+='<div class="err">'+dGenErr+'</div>';
+    SLOTS.forEach(([key,label])=>{
+      const P=poolR(key);
+      h+='<div class="between" style="margin:20px 0 8px"><span class="sec" style="margin:0">'+label+' · '+P.length+' وصفة</span>'+
+        '<button class="chip" onclick="dtGen(\''+key+'\')">'+(dGen===key?'يولّد…':'+ ولّد وصفات')+'</button></div>'+
+        '<div class="card" style="padding:6px 16px 12px">'+P.map(r=>'<div class="exrow">'+
+        '<div><b>'+esc(r.n)+'</b>'+(r.gen?' <span class="muted" style="font-size:12px">جديدة</span>':'')+
+        '<div class="muted" style="font-size:12px">'+esc(r.d)+'</div>'+
+        '<button class="linkbtn" onclick="dtPut(\''+key+'\',\''+r.id+'\')">ضعها في '+label+' اليوم</button>'+
+        (r.gen?' <button class="linkbtn" style="color:var(--red)" onclick="dtDel(\''+r.id+'\')">حذف</button>':'')+'</div>'+
+        '<span>'+r.k+' سعرة<br>'+r.p+' جم بروتين</span></div>').join('')+'</div>';
+    });
+    return h+'<div style="height:30px"></div>';
+  }
+
+  const p=plan(dk); let tot={k:0,p:0,c:0,f:0};
+  SLOTS.forEach(([k])=>{const r=p[k]&&p[k].r;if(r){tot.k+=r.k;tot.p+=r.p;tot.c+=r.c;tot.f+=r.f}});
+  h+='<div class="card"><div class="between"><div><b style="font-size:32px;letter-spacing:-.03em">'+tot.k+'</b>'+
+    '<div class="muted" style="font-size:13px">من هدف '+T+' سعرة'+(tr?' (+'+TRAIN_BONUS+' يوم تمرين)':'')+'</div></div>'+
+    '<div class="muted" style="text-align:left;font-size:13px">كربوهيدرات '+tot.c+' جم<br>دهون '+tot.f+' جم</div></div>'+
+    '<div class="bar"><i style="width:'+Math.min(100,Math.round(tot.k/T*100))+'%;background:'+(tot.k>T*1.05?'var(--red)':'var(--blue)')+'"></i></div>'+
+    '<div class="between" style="margin-top:14px"><span class="muted">بروتين</span><b>'+tot.p+' / '+PT+' جم</b></div>'+
+    '<div class="bar"><i style="width:'+Math.min(100,Math.round(tot.p/PT*100))+'%;background:'+(tot.p>=PT?'var(--green)':'var(--yellow)')+'"></i></div>'+
+    (tot.p<PT?'<div class="muted" style="font-size:13px;margin-top:8px">ناقصك '+(PT-tot.p)+' جم بروتين. زد حصة اللحم أو أضف شيك بروتين.</div>':'')+'</div>';
+
+  let shop=[];
+  SLOTS.forEach(([key,label])=>{
+    const it=p[key];
+    if(!it){h+='<div class="card empty">'+label+': ما فيه وصفة تناسب استبعاداتك. خفّف الاستبعادات أو ولّد وصفات جديدة.</div>';return}
+    const r=it.r;shop=shop.concat(r.ing);
+    h+='<div class="day"><div class="day-top"><div class="tag" style="background:var(--'+
+      ({breakfast:'yellow',lunch:'blue',snack:'green',dinner:'red'}[key])+')"></div>'+
+      '<div style="flex:1"><h3>'+esc(r.n)+'</h3><div class="muted">'+label+
+      (tr&&key==='snack'?' · بعد التمرين':'')+' · '+r.t+' دقيقة · '+r.k+' سعرة · '+r.p+' جم بروتين</div></div>'+
+      '<button class="btn sm ghost" onclick="dtDone(\''+key+'\')" style="'+(it.done?'background:var(--green);color:#fff;border-color:var(--green)':'')+'">✓</button></div>'+
+      '<div class="exlist"><div class="muted" style="padding:8px 0">'+esc(r.d)+'</div>'+
+      (it.mods.length?'<div class="muted" style="color:var(--yellow);padding-bottom:6px">معدّلة: '+it.mods.map(m=>(MODS.find(x=>x.id===m)||{}).label).join(' · ')+'</div>':'')+
+      (it.cust?'<div class="muted" style="color:var(--yellow);padding-bottom:6px">وصفة معدّلة حسب طلبك</div>':'')+
+      '<div class="row"><button class="btn sm ghost" onclick="dtOpen(\''+key+'\',\'view\')">التفاصيل</button>'+
+      '<button class="btn sm ghost" onclick="dtOpen(\''+key+'\',\'swap\')">بدّل الوجبة</button></div></div></div>';
+  });
+  h+='<button class="btn ghost" style="margin-top:6px" onclick="dtShuffle()">ولّد خطة يوم جديدة</button>'+
+    '<div class="sec">مكونات اليوم ('+shop.length+')</div><div class="card" style="padding:6px 16px 12px">'+
+    shop.map(x=>'<div class="exrow"><div>'+esc(x)+'</div></div>').join('')+'</div><div style="height:30px"></div>';
+  return h;
+};
+
+/* ---- إضافات لشاشات التمارين ---- */
+window.dtTodayStrip=function(){
+  if(S.session||!D().pf.set)return '';
+  const dk=today(), tr=isTrain(dk), T=kcalTarget(dk), p=plan(dk);
+  let k=0,pr=0;SLOTS.forEach(([s])=>{const r=p[s]&&p[s].r;if(r){k+=r.k;pr+=r.p}});
+  return '<div class="sec">أكل اليوم</div><div class="card"><div class="between">'+
+    '<div><b style="font-size:22px">'+k+'</b> <span class="muted">من '+T+' سعرة</span>'+
+    '<div class="muted" style="font-size:13px">'+(tr?'يوم تمرين · +'+TRAIN_BONUS+' سعرة':'يوم راحة')+' · بروتين '+pr+'/'+proTarget()+' جم</div></div>'+
+    '<button class="btn sm ghost" onclick="tab=\'meals\';render();window.scrollTo(0,0)">افتح الخطة</button></div></div>';
+};
+window.dtWeightSection=function(){
+  const d=D(), ks=Object.keys(d.weights).sort(), cur=ks.length?d.weights[ks[ks.length-1]]:null;
+  const first=ks.length?d.weights[ks[0]]:null;
+  const dw=(cur!==null&&first!==null)?Math.round((cur-first)*10)/10:0;
+  const ws=wSeries(), lw=ws.length>1?Math.round((ws[ws.length-1].v-ws[ws.length-2].v)*10)/10:null;
+  const vs=volSeries();
+  let h='<div class="sec">وزن الجسم</div>'+
+    '<div class="card"><div class="row"><input id="dwin" type="number" step="0.1" placeholder="وزن اليوم بالكيلو" value="'+(d.weights[dk_(new Date())]||'')+'" style="flex:1;border:1px solid var(--line);border-radius:var(--r);padding:12px;text-align:center;background:#FAFAF9">'+
+    '<button class="btn sm" onclick="dtLogW()">احفظ</button></div>'+
+    '<div class="muted" style="font-size:13px;margin-top:8px">آخر وزن يحدّث حساب سعراتك تلقائياً.</div></div>'+
+    '<div class="grid2"><div class="stat"><b>'+(cur!==null?cur:'—')+'</b><em>الوزن الحالي (كجم)</em></div>'+
+    '<div class="stat"><b style="color:'+(dw<0?'var(--green)':dw>0?'var(--red)':'var(--ink)')+'">'+(dw>0?'+':'')+dw+'</b><em>التغيّر من البداية</em></div></div>'+
+    '<div class="card" style="margin-top:10px"><div class="between" style="margin-bottom:4px"><span class="muted">متوسط الوزن الأسبوعي</span>'+
+    '<b style="color:'+(lw===null?'var(--ink)':lw<0?'var(--green)':'var(--red)')+'">'+(lw===null?'—':(lw>0?'+':'')+lw+' كجم')+'</b></div>'+
+    lineChart(ws,'#0E4FA8')+'</div>';
+  if(ws.length>1){
+    h+='<div class="card" style="padding:4px 16px"><table><thead><tr><th>الأسبوع</th><th>الوزن</th><th>الفرق</th><th>حجم التمرين</th></tr></thead><tbody>'+
+      ws.slice(-8).reverse().map((x,i,a)=>{const pv=a[i+1],df=pv?Math.round((x.v-pv.v)*10)/10:null;
+        const dt=new Date(x.w+"T00:00:00");
+        return '<tr><td>'+dt.getDate()+' '+AR_M[dt.getMonth()]+'</td><td><b>'+x.v+'</b></td>'+
+          '<td style="color:'+(df===null?'var(--steel)':df<0?'var(--green)':df>0?'var(--red)':'var(--steel)')+'">'+(df===null?'—':(df>0?'+':'')+df)+'</td>'+
+          '<td class="muted">'+((vs[x.w]||0).toLocaleString('en'))+' كجم</td></tr>'}).join('')+'</tbody></table>'+
+      '<p class="muted" style="font-size:13px;padding-bottom:10px">الوزن ينزل والحجم يثبت أو يرتفع = تنشيف صح. الاثنين ينزلون = فقدان عضل.</p></div>';
+  }
+  return h;
+};
+window.dtSettingsSection=function(){
+  const d=D();
+  return '<div class="sec">التغذية — بياناتك</div><div class="card">'+pfForm()+
+    '<div class="between" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">'+
+    '<span class="muted">يوم راحة</span><b>'+kcalBase(d.pf)+' سعرة</b></div>'+
+    '<div class="between" style="margin-top:6px"><span class="muted">يوم تمرين</span><b>'+(kcalBase(d.pf)+TRAIN_BONUS)+' سعرة</b></div>'+
+    '<div class="between" style="margin-top:6px"><span class="muted">هدف البروتين</span><b>'+proTarget()+' جم</b></div></div>'+
+    '<div class="sec">أشياء ما تاكلها</div><div class="card">'+
+    '<p class="muted" style="margin:0 0 10px">أي وصفة فيها هذي الأصناف ما راح تظهر، وحتى الوصفات المولّدة راح تتجنبها.</p>'+
+    '<div class="chips">'+TAGS.map(t=>'<button class="chip '+(d.excl.includes(t[0])?'on':'')+'" onclick="dtTag(\''+t[0]+'\')">'+t[1]+'</button>').join('')+'</div>'+
+    '<div class="sec" style="margin:16px 0 8px">استبعاد مكوّن بالاسم</div>'+
+    '<div class="row"><input id="dcin" placeholder="كزبرة، باذنجان…" style="flex:1;border:1px solid var(--line);border-radius:var(--r);padding:12px;background:#FAFAF9">'+
+    '<button class="btn sm" onclick="dtAddC()">أضف</button></div>'+
+    (d.custom.length?'<div class="chips" style="margin-top:10px">'+d.custom.map((w,i)=>'<button class="chip on" onclick="dtRmC('+i+')">'+esc(w)+' ✕</button>').join('')+'</div>':'')+
+    '<div class="muted" style="font-size:13px;margin-top:14px">'+BASE.length+' وصفة أساسية + '+(d.lib||[]).length+' وصفة مولّدة محفوظة.</div></div>';
+};
+
+/* ---- التهيئة والترحيل ---- */
+window.dietBoot=async function(){
+  if(!S.diet){
+    const g=S.config||{};
+    S.diet={pf:{sex:'m',age:35,w:85,h:175,
+      act:(g.days>=5?'high':g.days<=3?'low':'mid'),
+      goal:({fat:'cut',mus:'gain',both:'keep',str:'keep'}[g.goal]||'keep'),set:0},
+      excl:[],custom:[],days:{},lib:[],weights:{}};
+    /* ترحيل بيانات تطبيق الأكل القديم */
+    const rd=async k=>{try{if(window.storage){const r=await window.storage.get(k);if(r&&r.value)return r.value}}catch(e){}
+      try{return localStorage.getItem(k)}catch(e){}return null};
+    try{const s=await rd('diet:settings');
+      if(s){const v=JSON.parse(s);
+        if(v.profile){S.diet.pf=Object.assign(S.diet.pf,v.profile);S.diet.pf.set=1}
+        S.diet.excl=v.excl||[];S.diet.custom=v.custom||[]}}catch(e){}
+    try{const x=await rd('diet:days');if(x)S.diet.days=JSON.parse(x)}catch(e){}
+    try{const x=await rd('diet:lib');if(x)S.diet.lib=JSON.parse(x)}catch(e){}
+    try{const x=await rd('diet:weights');if(x)S.diet.weights=JSON.parse(x)}catch(e){}
+    await save();
+  }
+  const d=S.diet;d.excl=d.excl||[];d.custom=d.custom||[];d.days=d.days||{};d.lib=d.lib||[];d.weights=d.weights||{};
+  d.pf=d.pf||{sex:'m',age:35,w:85,h:175,act:'mid',goal:'keep',set:0};
+};
+
+/* ---- تغليف شاشات التمارين ---- */
+const _today=todayView, _prog=progressView, _set=settingsView;
+todayView=function(){return _today()+(typeof dtTodayStrip==='function'?dtTodayStrip():'')};
+progressView=function(){return _prog()+dtWeightSection()+'<div style="height:30px"></div>'};
+settingsView=function(){return _set().replace('<div style="height:30px"></div>','')+dtSettingsSection()+'<div style="height:30px"></div>'};
+
+})();
 </script>
 </body>
 </html>
