@@ -816,8 +816,18 @@ function render(){
   if(!S.config||!S.program){nav.classList.add('hidden');app.innerHTML=setupView();$('hdInfo').textContent='';window.scrollTo(0,0);return;}
   nav.classList.remove('hidden');
   $('hdInfo').textContent=GOALS[S.config.goal].n+' · '+S.config.days+' أيام';
-  app.innerHTML={today:todayView,program:programView,meals:dietView,progress:progressView,settings:settingsView}[tab]();
-  if(tab!=='meals'&&typeof dtClose==='function')dtClose();
+  let _h='';
+  try{
+    const V={today:todayView,program:programView,progress:progressView,settings:settingsView};
+    if(typeof dietView==='function')V.meals=dietView;
+    _h=(V[tab]||V.today)();
+  }catch(err){
+    console.error(err);
+    _h='<div class="card"><b>صار خطأ في هذي الشاشة</b><p class="muted">'+String(err&&err.message||err)+'</p>'+
+       '<p class="muted">أرسل نص الخطأ عشان يتصلح.</p></div>';
+  }
+  app.innerHTML=_h;
+  if(tab!=='meals'&&typeof dtClose==='function')try{dtClose()}catch(e){}
   [...nav.querySelectorAll('button')].forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
 }
 $('nav').addEventListener('click',e=>{
@@ -941,7 +951,14 @@ const tagLabel=id=>(TAGS.find(t=>t[0]===id)||[,id])[1];
 let dDate=new Date(), dSub='day', dOpen=null, dMode='view';
 let dAiText='', dAiLoad=false, dAiErr='', dGen='', dGenErr='';
 
-const D=()=>S.diet;
+function ensureD(){
+  if(!S.diet)S.diet={pf:{sex:'m',age:35,w:85,h:175,act:'mid',goal:'keep',set:0},excl:[],custom:[],days:{},lib:[],weights:{}};
+  const d=S.diet;
+  d.excl=d.excl||[];d.custom=d.custom||[];d.days=d.days||{};d.lib=d.lib||[];d.weights=d.weights||{};
+  d.pf=d.pf||{sex:'m',age:35,w:85,h:175,act:'mid',goal:'keep',set:0};
+  return d;
+}
+const D=()=>ensureD();
 const ALLR=()=>BASE.concat(D().lib||[]);
 const byIdR=id=>ALLR().find(r=>r.id===id);
 
@@ -1309,9 +1326,12 @@ window.dietBoot=async function(){
 
 /* ---- تغليف شاشات التمارين ---- */
 const _today=todayView, _prog=progressView, _set=settingsView;
-todayView=function(){return _today()+(typeof dtTodayStrip==='function'?dtTodayStrip():'')};
-progressView=function(){return _prog()+dtWeightSection()+'<div style="height:30px"></div>'};
-settingsView=function(){return _set().replace('<div style="height:30px"></div>','')+dtSettingsSection()+'<div style="height:30px"></div>'};
+function safe(f){try{return f()}catch(e){console.error('[diet]',e);
+  return '<div class="card"><b>تعذّر عرض قسم التغذية</b><p class="muted">'+esc(e&&e.message||e)+'</p></div>'}}
+todayView=function(){return _today()+safe(dtTodayStrip)};
+progressView=function(){return _prog()+safe(dtWeightSection)+'<div style="height:30px"></div>'};
+settingsView=function(){return _set().replace('<div style="height:30px"></div>','')+safe(dtSettingsSection)+
+  '<p class="muted" style="font-size:12px;text-align:center;margin:18px 0">الإصدار: تمارين + تغذية · v2</p><div style="height:30px"></div>'};
 
 })();
 </script>
