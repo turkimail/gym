@@ -2084,6 +2084,127 @@ const _set3=settingsView;
 settingsView=function(){return _set3().replace('<div style="height:30px"></div>','')+
   safe(dtMyExSection)+'<div style="height:30px"></div>'};
 
+/* ================= نموذج إضافة تمرين — نسخة كاملة ================= */
+let camMode=0;   /* 0=بدائل  1=كود للنموذج  2=صورة للنموذج */
+dtAddOpen=function(code,name){
+  addF={n:name||'',en:'',p:'chest_h',e:[],t:'c',tip:'',code:code||'',
+    c1:'',c2:'',c3:'',x1:'',x2:'',photo:'',hash:'',from:!!swapCtx};
+  renderAdd();
+};
+window.dtAddOpen=dtAddOpen;
+window.dtAddScan=function(){const el=$('addsheet');if(el)el.remove();camMode=1;dtCam(1)};
+window.dtAddPhoto=function(){const el=$('addsheet');if(el)el.remove();camMode=2;dtCam(1)};
+window.dtAddDropPhoto=function(){addF.photo='';addF.hash='';renderAdd()};
+
+dtCode=function(code){
+  const v=$('camvid');
+  if(v&&v.videoWidth)camShot={img:shrink(v),h:aHash(v)};
+  if(camMode===1){camMode=0;dtCloseCam();if(addF){addF.code=code;renderAdd()}return}
+  const known=codes()[code];
+  dtCloseCam();
+  if(known&&exOf(known)){linkMode=null;dtToast('الجهاز: '+exOf(known).n);doSwap(known);return}
+  const m=matchCode(code);
+  if(m){
+    codes()[code]=m.ex.id;
+    if(camShot){photos()[m.ex.id]=camShot.img;hashes()[m.ex.id]=camShot.h}
+    save();linkMode=null;dtToast('تعرّفنا على: '+m.ex.n);doSwap(m.ex.id);return;
+  }
+  linkMode=null;dtAddOpen(code,guessName(code));
+  dtToast('كود جديد — أكمل بيانات التمرين مرة وحدة');
+};
+window.dtShot=function(){
+  const v=$('camvid');
+  if(!v||!v.videoWidth){camMsg('الكاميرا لسه ما جهزت.');return}
+  const h=aHash(v),img=shrink(v);
+  if(camMode===2){camMode=0;dtCloseCam();if(addF){addF.photo=img;addF.hash=h;renderAdd()}return}
+  camShot={img:img,h:h};
+  let best=null,bd=99;const H=hashes();
+  for(const id in H){const d=hdist(H[id],h);if(d<bd){bd=d;best=id}}
+  dtCloseCam();
+  linkMode=(best&&bd<=10&&exOf(best))?{code:null,shot:camShot,guess:best,dist:bd}:{code:null,shot:camShot};
+  if(swapCtx)openSwap(swapCtx.ei,swapCtx.di);
+};
+
+renderAdd=function(){
+  let el=$('addsheet');
+  if(!addF){if(el)el.remove();return}
+  if(!el){el=document.createElement('div');el.className='sheet';el.id='addsheet';
+    el.onclick=e=>{if(e.target===el)dtAddClose()};document.body.appendChild(el)}
+  const F={axn:'n',axen:'en',axt:'tip',axc:'code',ax1:'c1',ax2:'c2',ax3:'c3',axe1:'x1',axe2:'x2'};
+  const inp=(id,ph)=>'<input id="'+id+'" value="'+esc(addF[F[id]]||'')+'" placeholder="'+ph+
+    '" oninput="dtAddTxt(\''+F[id]+'\',this.value)" style="width:100%;border:1px solid var(--line);'+
+    'border-radius:var(--r);padding:12px;background:#FAFAF9;margin-bottom:8px">';
+  el.innerHTML='<div class="sheet-in"><div class="between"><h3>إضافة تمرين</h3>'+
+    '<button class="linkbtn" onclick="dtAddClose()">إغلاق</button></div>'+
+    '<div class="sec" style="margin-top:12px">اسم التمرين</div>'+inp('axn','مثال: جهاز الضغط الصدري هامر')+
+    '<div class="sec">الاسم بالإنجليزي (يحسّن بحث الفيديو)</div>'+inp('axen','مثال: Hammer Strength Chest Press')+
+    '<div class="sec">المجموعة العضلية</div><div class="chips">'+
+      Object.keys(PNAME).map(p=>'<button class="chip '+(addF.p===p?'on':'')+'" onclick="dtAddSet(\'p\',\''+p+'\')">'+PNAME[p]+'</button>').join('')+'</div>'+
+    '<div class="muted" style="font-size:13px;margin-top:6px">يستهدف: '+
+      (muOfP(addF.p).map(m=>MN[m]).filter(Boolean).join(' · ')||'—')+'</div>'+
+    '<div class="sec">المعدات المطلوبة</div><div class="chips">'+
+      EQUIP.map(q=>'<button class="chip '+(addF.e.indexOf(q.id)>-1?'on':'')+'" onclick="dtAddEq(\''+q.id+'\')">'+q.n+'</button>').join('')+
+      '</div>'+(addF.e.length?'':'<div class="muted" style="font-size:13px;margin-top:6px">بدون معدات = تمرين وزن الجسم</div>')+
+    '<div class="sec">النوع</div><div class="chips">'+
+      '<button class="chip '+(addF.t==='c'?'on':'')+'" onclick="dtAddSet(\'t\',\'c\')">مركّب</button>'+
+      '<button class="chip '+(addF.t==='i'?'on':'')+'" onclick="dtAddSet(\'t\',\'i\')">عزل</button></div>'+
+    '<div class="sec">نقاط التكنيك</div>'+
+    '<p class="muted" style="margin:0 0 8px">اتركها فاضية وبيستخدم تكنيك المجموعة العام.</p>'+
+    inp('ax1','النقطة الأولى')+inp('ax2','النقطة الثانية')+inp('ax3','النقطة الثالثة')+
+    '<div class="sec">أخطاء شائعة</div>'+inp('axe1','الخطأ الأول')+inp('axe2','الخطأ الثاني')+
+    '<div class="sec">ملاحظة سريعة تظهر تحت الاسم</div>'+inp('axt','مثال: المقبض بمستوى منتصف الصدر')+
+    '<div class="sec">صورة الجهاز</div>'+
+    (addF.photo?'<div class="row" style="margin-bottom:8px"><img src="'+addF.photo+
+      '" style="width:84px;height:84px;object-fit:cover;border-radius:12px">'+
+      '<button class="btn sm ghost" onclick="dtAddDropPhoto()">احذف الصورة</button></div>'
+     :'<div class="row" style="margin-bottom:8px"><button class="btn sm ghost" onclick="dtAddPhoto()">التقط صورة الجهاز</button></div>')+
+    '<div class="sec">كود الجهاز (اختياري)</div>'+
+    '<div class="row">'+inp('axc','امسحه أو اكتبه')+
+      '<button class="btn sm ghost" style="flex:0 0 90px;margin-bottom:8px" onclick="dtAddScan()">امسح</button></div>'+
+    '<div class="muted" style="font-size:13px">لما تربط الكود، أي مسح له بعدين يفتح هذا التمرين مباشرة.</div>'+
+    '<div class="row" style="margin-top:16px"><button class="btn" onclick="dtAddSave()">احفظ التمرين</button></div>'+
+    '<div style="height:20px"></div></div>';
+};
+
+window.dtAddSave=async function(){
+  const F={axn:'n',axen:'en',axt:'tip',axc:'code',ax1:'c1',ax2:'c2',ax3:'c3',axe1:'x1',axe2:'x2'};
+  Object.keys(F).forEach(id=>{const el=$(id);if(el&&typeof el.value==='string')addF[F[id]]=el.value.trim()});
+  if(!addF.n){dtToast('اكتب اسم التمرين أولاً');return}
+  const id='cx'+Date.now().toString(36);
+  const cues=[addF.c1,addF.c2,addF.c3].filter(Boolean);
+  const errs=[addF.x1,addF.x2].filter(Boolean);
+  const rec={id:id,n:addF.n,p:addF.p,e:addF.e.slice(),t:addF.t,
+    tip:addF.tip||(cues[0]||'تمرين مضاف من عندك'),en:addF.en||addF.n,c:cues,x:errs};
+  S.cex=(S.cex||[]).concat(rec);
+  EX.push({id:rec.id,n:rec.n,p:rec.p,e:rec.e,t:rec.t,tip:rec.tip});
+  EN[id]=rec.en;
+  if(cues.length||errs.length){OV[id]={};if(cues.length)OV[id].c=cues;if(errs.length)OV[id].e=errs}
+  if(addF.code)codes()[addF.code]=id;
+  if(addF.photo){photos()[id]=addF.photo;hashes()[id]=addF.hash}
+  const from=addF.from;
+  addF=null;dtAddClose();await save();
+  dtToast('انضاف: '+rec.n);
+  if(from&&swapCtx)doSwap(id);else render();
+};
+window.dtDelEx=async function(id){
+  S.cex=(S.cex||[]).filter(x=>x.id!==id);
+  const i=EX.findIndex(x=>x.id===id);if(i>-1)EX.splice(i,1);
+  delete OV[id];delete EN[id];
+  const c=codes();Object.keys(c).forEach(k=>{if(c[k]===id)delete c[k]});
+  delete photos()[id];delete hashes()[id];
+  await save();render();
+};
+const _boot2=dietBoot;
+dietBoot=async function(){
+  await _boot2();
+  (S.cex||[]).forEach(r=>{
+    if(!EX.some(x=>x.id===r.id))EX.push({id:r.id,n:r.n,p:r.p,e:r.e||[],t:r.t||'c',tip:r.tip||''});
+    EN[r.id]=r.en||r.n;
+    if((r.c&&r.c.length)||(r.x&&r.x.length)){OV[r.id]={};
+      if(r.c&&r.c.length)OV[r.id].c=r.c;if(r.x&&r.x.length)OV[r.id].e=r.x}
+  });
+};
+
 })();
 </script>
 </body>
