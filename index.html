@@ -1610,6 +1610,117 @@ doSwap=async function(newId){
   await _doSwap(newId);
 };
 
+/* ================= توسعة قاعدة التمارين ================= */
+const X=(id,n,p,e,t,tip,en)=>{if(!EX.some(x=>x.id===id)){EX.push({id,n,p,e,t,tip});EN[id]=en}};
+/* صدر — دفع أفقي */
+X('dfp','بنش أرضي دمبل','chest_h',['dumbbell'],'c','مدى أقصر يحمي الكتف','Dumbbell Floor Press');
+X('kfp','بنش أرضي كتل بل','chest_h',['kettlebell'],'c','ثبّت المعصم مستقيم','Kettlebell Floor Press');
+X('cpr','ضغط كيبل واقف','chest_h',['cable'],'c','خطوة للأمام وشد البطن','Standing Cable Chest Press');
+X('wpush','ضغط أرضي قبضة عريضة','chest_h',[],'c','اليد أوسع من الكتف بشبر','Wide Push Up');
+X('dbpush','ضغط أرضي على الدمبلات','chest_h',['dumbbell'],'c','نزول أعمق للصدر','Deficit Push Up');
+X('mdip','متوازي بمساعدة الأستك','chest_h',['dip_bar','bands'],'c','الأستك تحت الركبة','Band Assisted Dips');
+/* صدر — دفع علوي */
+X('cincp','ضغط كيبل من أسفل لأعلى','chest_i',['cable'],'c','ادفع باتجاه الأعلى بزاوية','Low to High Cable Press');
+X('bandinc','ضغط أستك مائل','chest_i',['bands'],'c','الأستك خلف الظهر والاتجاه لأعلى','Band Incline Press');
+X('kinc','ضغط كتل بل مائل','chest_i',['kettlebell','bench'],'c','ميلة ٣٠ درجة تكفي','Kettlebell Incline Press');
+/* صدر — تفتيح */
+X('cflyl','تفتيح كيبل من أسفل','chest_f',['cable'],'i','ارفع باتجاه أعلى الصدر','Low Cable Fly');
+X('svend','ضغط سفيند','chest_f',['dumbbell'],'i','اعصر الدمبلين ببعض طول الحركة','Svend Press');
+X('flypush','ضغط أرضي مع تزحلق','chest_f',[],'i','افتح الذراع ببطء على أرضية ملساء','Sliding Fly Push Up');
+/* ظهر — سحب عمودي */
+X('npull','عقلة قبضة محايدة','back_v',['pullup_bar'],'c','أسهل على الكتف والمرفق','Neutral Grip Pull Up');
+X('apull','عقلة بمساعدة الأستك','back_v',['pullup_bar','bands'],'c','الأستك تحت الركبة أو القدم','Band Assisted Pull Up');
+X('nlat','سحب لات قبضة محايدة','back_v',['machine_row'],'c','اسحب للصدر مو خلف الرقبة','Neutral Grip Lat Pulldown');
+X('cpo','بولوفر كيبل','back_v',['cable'],'i','الذراع شبه مستقيم والحركة من الكتف','Cable Pullover');
+X('dpo','بولوفر دمبل','back_v',['dumbbell','bench'],'i','لا تقوّس أسفل الظهر','Dumbbell Pullover');
+X('strap','سحب عمودي بالأستك جالس','back_v',['bands'],'c','ثبّت الأستك بمكان عالي','Seated Band Pulldown');
+/* ظهر — سحب أفقي */
+X('tbar','تجديف تي بار','back_h',['barbell'],'c','صدر مفتوح وظهر محايد','T Bar Row');
+X('pend','تجديف بندلاي','back_h',['barbell'],'c','ابدأ كل تكرار من الأرض','Pendlay Row');
+X('chrow','تجديف بصدر مسند','back_h',['dumbbell','bench'],'c','يمنع الغش بالجسم تماماً','Chest Supported Dumbbell Row');
+X('krow','تجديف كتل بل','back_h',['kettlebell'],'c','اسحب باتجاه الخصر','Kettlebell Row');
+X('c1row','تجديف كيبل بيد وحدة','back_h',['cable'],'c','لف بسيط بالجذع يزيد المدى','Single Arm Cable Row');
+X('mseal','تجديف جهاز بقبضة عريضة','back_h',['machine_row'],'c','اعصر لوح الكتف قبل الرجوع','Wide Grip Machine Row');
+/* خلفية وظهر سفلي */
+X('sldl','رفعة ميتة برجل وحدة','hinge',['dumbbell'],'c','الحوض ثابت ما يلف','Single Leg Romanian Deadlift');
+X('gmorn','جود مورنينج','hinge',['barbell','rack'],'c','وزن خفيف والظهر محايد','Good Morning');
+X('rackp','راك بول','hinge',['barbell','rack'],'c','البار من مستوى الركبة','Rack Pull');
+X('kdl','رفعة ميتة كتل بل','hinge',['kettlebell'],'c','ادفع الحوض للخلف مو تنزل بالركبة','Kettlebell Deadlift');
+X('bdl','رفعة ميتة بالأستك','hinge',['bands'],'c','الأستك تحت القدمين','Band Deadlift');
+X('hyper','تمديد ظهر','hinge',[],'i','لا تفرط بالتقويس بالأعلى','Back Extension');
+/* كتف — ضغط */
+X('ppress','بوش برس','shoulder',['barbell','rack'],'c','دفعة خفيفة بالأرجل ثم ضغط','Push Press');
+X('arn','ضغط أرنولد','shoulder',['dumbbell'],'c','لف المعصم أثناء الصعود','Arnold Press');
+X('land','ضغط لاندماين','shoulder',['barbell'],'c','ألطف زاوية على الكتف','Landmine Press');
+X('sdohp','ضغط دمبل جالس','shoulder',['dumbbell','bench'],'c','ظهر ملتصق بالمسند','Seated Dumbbell Press');
+X('bohp','ضغط أستك واقف','shoulder',['bands'],'c','ثبّت الأستك تحت القدمين','Band Overhead Press');
+/* كتف جانبي */
+X('mside','جهاز رفرفة جانبي','side',['machine_press'],'i','المرفق يقود الحركة','Lateral Raise Machine');
+X('lean','رفرفة مائلة بكيبل','side',['cable'],'i','امسك عمود ومِل بجسمك','Leaning Cable Lateral Raise');
+X('part21','رفرفة جزئية','side',['dumbbell'],'i','نصف مدى علوي ثم كامل','Partial Lateral Raise');
+X('kside','رفرفة جانبية كتل بل','side',['kettlebell'],'i','قبضة محايدة وحركة بطيئة','Kettlebell Lateral Raise');
+/* كتف خلفي */
+X('crear','رفرفة خلفية كيبل','rear',['cable'],'i','الكيبل متقاطع أمام الجسم','Cable Rear Delt Fly');
+X('srear','رفرفة خلفية جالس','rear',['dumbbell','bench'],'i','صدرك على فخذك والمدى قصير','Seated Bent Over Rear Delt Fly');
+X('prone','رفرفة خلفية على بنش مائل','rear',['dumbbell','bench'],'i','وجهك للمسند يمنع الغش','Prone Incline Rear Delt Raise');
+/* أرجل — سكوات */
+X('hack','هاك سكوات','squat',['leg_machine'],'c','الظهر ملاصق للمسند','Hack Squat');
+X('pause','سكوات بوقفة','squat',['barbell','rack'],'c','ثانيتين ثبات بالأسفل','Pause Squat');
+X('box','بوكس سكوات','squat',['barbell','rack'],'c','المس الصندوق بدون ارتخاء','Box Squat');
+X('jsq','سكوات قفز','squat',[],'c','نزول ناعم على منتصف القدم','Jump Squat');
+X('ksq','سكوات كتل بل أمامي','squat',['kettlebell'],'c','الكتل بل بمستوى الصدر','Kettlebell Front Squat');
+/* أمامية الفخذ */
+X('split','سبليت سكوات ثابت','quad',['dumbbell'],'c','الوزن على الرجل الأمامية','Dumbbell Split Squat');
+X('wlun','لانج مشي','quad',['dumbbell'],'c','خطوة طويلة والجذع مستقيم','Walking Lunge');
+X('cyc','سكوات بكعب مرفوع','quad',['dumbbell'],'c','ارفع الكعب على لوح صغير','Heel Elevated Squat');
+X('sdown','نزول من درجة','quad',[],'c','انزل ببطء ٣ ثواني','Step Down');
+/* خلفية الفخذ */
+X('slc','كيرل أرجل جالس','ham',['leg_machine'],'i','ثبّت الفخذ تحت الوسادة','Seated Leg Curl');
+X('bcurl','كيرل أرجل بالأستك','ham',['bands'],'i','ثبّت الأستك بمكان منخفض','Band Leg Curl');
+X('slide','كيرل بالمنشفة','ham',[],'i','أرضية ملساء ومنشفة تحت الكعب','Slider Hamstring Curl');
+X('kswing','مرجحة كتل بل بيد وحدة','ham',['kettlebell'],'c','القوة من الحوض مو الذراع','Single Arm Kettlebell Swing');
+/* مؤخرة */
+X('bht','هيب ثرست بالأستك','glute',['bands'],'i','الأستك فوق الحوض','Band Hip Thrust');
+X('sht','هيب ثرست برجل وحدة','glute',['bench'],'i','الحوض ما يميل لجهة','Single Leg Hip Thrust');
+X('abd','تبعيد الفخذ بالجهاز','glute',['leg_machine'],'i','ميلة بسيطة للأمام تزيد الشد','Hip Abduction Machine');
+X('frog','فروج بمب','glute',[],'i','باطن القدمين ملتصق','Frog Pump');
+/* بطات */
+X('seatc','بطات جالس','calf',['leg_machine'],'i','يستهدف الجزء السفلي','Seated Calf Raise');
+X('lpcalf','بطات على جهاز الرجل','calf',['leg_machine'],'i','مقدمة القدم على حافة اللوح','Leg Press Calf Raise');
+X('bcalf','بطات بالأستك','calf',['bands'],'i','ثبّت بالأعلى ثانية','Band Calf Raise');
+X('s1calf','بطات برجل وحدة','calf',[],'i','امسك جدار للتوازن','Single Leg Calf Raise');
+/* باي */
+X('inc_c','باي مائل دمبل','bi',['dumbbell','bench'],'i','أقصى إطالة للباي','Incline Dumbbell Curl');
+X('preach','باي بريتشر','bi',['barbell','bench'],'i','لا تفرد المرفق كامل بالأسفل','Preacher Curl');
+X('conc','باي تركيز','bi',['dumbbell'],'i','المرفق على الفخذ الداخلي','Concentration Curl');
+X('rope_c','باي حبل كيبل','bi',['cable'],'i','شد مستمر طول الحركة','Cable Rope Curl');
+X('rev_c','باي عكسي','bi',['barbell'],'i','يقوّي الساعد كمان','Reverse Barbell Curl');
+X('kcurl','باي كتل بل','bi',['kettlebell'],'i','المعصم مستقيم','Kettlebell Curl');
+/* تراي */
+X('rope_t','تراي حبل','tri',['cable'],'i','افتح الحبل بالنهاية','Rope Triceps Pushdown');
+X('kick','كيك باك دمبل','tri',['dumbbell'],'i','الذراع موازية للأرض','Dumbbell Kickback');
+X('cgb','بنش قبضة ضيقة','tri',['barbell','bench'],'c','المرفق قريب من الجسم','Close Grip Bench Press');
+X('band_t','تراي بالأستك','tri',['bands'],'i','ثبّت الأستك فوق الرأس','Band Triceps Extension');
+X('oh_c','تراي كيبل خلف الرأس','tri',['cable'],'i','المرفق ثابت للأمام','Overhead Cable Triceps Extension');
+/* بطن */
+X('deadb','ديد باق','core',[],'i','أسفل الظهر ملاصق للأرض','Dead Bug');
+X('hollow','هولو هولد','core',[],'i','شد البطن ولا ترفع الظهر','Hollow Body Hold');
+X('splank','بلانك جانبي','core',[],'i','الحوض مرفوع وخط مستقيم','Side Plank');
+X('pallof','بالوف برس','core',['cable'],'i','قاوم اللف ولا تلتف','Pallof Press');
+X('chop','ووداتشوب كيبل','core',['cable'],'i','الحركة من الجذع مو الذراع','Cable Woodchop');
+X('hkr','رفع ركب معلق','core',['pullup_bar'],'i','ارفع الحوض بالنهاية','Hanging Knee Raise');
+X('bike','بطن دراجة','core',[],'i','ببطء والمرفق نحو الركبة المقابلة','Bicycle Crunch');
+/* كارديو */
+X('cardio_r','جهاز التجديف','cardio',['cardio'],'c','الترتيب: أرجل ثم جذع ثم ذراع','Rowing Machine');
+X('cardio_c','دراجة ثابتة','cardio',['cardio'],'c','مقاومة متوسطة وإيقاع ثابت','Stationary Bike');
+X('cardio_s','درج متحرك','cardio',['cardio'],'c','لا تتكئ على المقابض','Stair Climber');
+X('cardio_j','نط الحبل','cardio',[],'c','قفزات صغيرة من رسغ القدم','Jump Rope');
+X('cardio_mc','ماونتن كلايمرز','cardio',[],'c','الحوض ثابت والحركة بالركب','Mountain Climbers');
+X('cardio_i','فترات عالية الشدة','cardio',['cardio'],'c','٣٠ ثانية شدة و٩٠ ثانية راحة','HIIT Intervals');
+/* سد الفجوة: أنماط بلا بديل منزلي */
+X('twpd','سحب عمودي بمنشفة','back_v',[],'c','لف منشفة على إطار باب متين واسحب لأسفل ببطء','Towel Lat Pulldown');
+X('bottle','رفرفة جانبية بقوارير ماء','side',[],'i','قارورتين ونص لتر وتكرارات عالية','Water Bottle Lateral Raise');
+
 })();
 </script>
 </body>
