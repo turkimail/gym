@@ -2205,6 +2205,55 @@ dietBoot=async function(){
   });
 };
 
+/* ================= إصلاح تلقائي للبرنامج المحفوظ ================= */
+function fixProgram(){
+  let fixed=0,dropped=0;
+  const has=r=>S.config&&S.config.eq.indexOf(r)>-1;
+  if(S.program&&S.program.days)S.program.days.forEach(d=>{
+    if(!d.ex||!d.ex.length)return;
+    const keep=[];
+    d.ex.forEach(e=>{
+      const cur=exOf(e.id);
+      if(cur){if(!PAT[e.slot])e.slot=cur.p;keep.push(e);return}
+      /* معرّف مفقود: ابحث عن بديل بنفس المجموعة */
+      const pool=EX.filter(x=>PAT[e.slot]&&x.p===e.slot)
+        .sort((a,b)=>(b.e.every(has)-a.e.every(has))||((b.t==='c')-(a.t==='c')));
+      if(pool.length){e.id=pool[0].id;fixed++;keep.push(e)}
+      else dropped++;
+    });
+    d.ex=keep;
+  });
+  /* الحصة الجارية */
+  if(S.session){
+    const day=S.program&&S.program.days&&S.program.days[S.session.di];
+    if(!day||!day.ex||!day.ex.length)S.session=null;
+  }
+  /* سجلات قديمة لتمارين محذوفة لا تكسر شاشة التقدم */
+  if(S.logs)Object.keys(S.logs).forEach(k=>{
+    const l=S.logs[k];
+    if(l&&l.entries)Object.keys(l.entries).forEach(id=>{if(!exOf(id))delete l.entries[id]});
+  });
+  return {fixed,dropped};
+}
+window.dtFix=fixProgram;
+const _boot3=dietBoot;
+dietBoot=async function(){
+  await _boot3();
+  const r=fixProgram();
+  if(r.fixed||r.dropped){
+    await save();
+    setTimeout(()=>{if(typeof dtToast==='function')
+      dtToast('صلّحنا '+(r.fixed+r.dropped)+' تمرين مفقود في برنامجك')},900);
+  }
+};
+/* حذف تمرين مضاف يصلح البرنامج فوراً */
+const _del=dtDelEx;
+window.dtDelEx=async function(id){
+  await _del(id);
+  const r=fixProgram();
+  if(r.fixed||r.dropped){await save();render()}
+};
+
 })();
 </script>
 </body>
