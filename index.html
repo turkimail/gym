@@ -1859,6 +1859,231 @@ const _set2=settingsView;
 settingsView=function(){return _set2().replace('<div style="height:30px"></div>','')+
   safe(dtGearSection)+'<div style="height:30px"></div>'};
 
+/* ================= قراءة الباركود الذكية + إضافة تمرين ================= */
+const STOP=['http','https','www','com','net','org','sa','html','php','index','item','code','qr',
+ 'gym','fitness','club','equipment','model','serial','the','and','for','with'];
+const norm=s=>(s||'').toLowerCase().replace(/[^a-z0-9\u0600-\u06FF]+/g,' ').replace(/\s+/g,' ').trim();
+const EQKW={'machine':['machine_press','machine_row','leg_machine'],'hammer':['machine_press','machine_row'],
+ 'جهاز':['machine_press','machine_row','leg_machine'],'dumbbell':['dumbbell'],'دمبل':['dumbbell'],
+ 'barbell':['barbell'],'بار':['barbell'],'cable':['cable'],'كيبل':['cable'],'كابل':['cable'],
+ 'band':['bands'],'أستك':['bands'],'استك':['bands'],'kettlebell':['kettlebell'],'كتل':['kettlebell'],
+ 'smith':['barbell','rack'],'rack':['rack'],'bench':['bench'],'بنش':['bench']};
+const PKW={
+ chest_h:['chest','bench','صدر','بنش','صدري'],chest_i:['incline','علوي','مائل'],
+ chest_f:['fly','pec','deck','تفتيح','بيك'],
+ back_v:['pulldown','lat','pullup','عقلة','لات','عمودي'],
+ back_h:['row','rowing','تجديف','أفقي'],
+ hinge:['deadlift','رفعة','ميتة','ديدلفت'],
+ shoulder:['shoulder','overhead','كتف','اكتاف','أكتاف'],
+ side:['lateral','رفرفة','جانبي','جانبية'],rear:['rear','خلفي','خلفية الكتف'],
+ squat:['squat','سكوات','قرفصاء','هاك','ارجل','أرجل','رجل','ليج برس'],
+ quad:['extension','اكستنشن','إكستنشن','لانج','lunge','أمامية'],
+ ham:['hamstring','كيرل','خلفية الفخذ'],glute:['glute','hip','ثرست','مؤخرة','أرداف'],
+ calf:['calf','بطات','سمانة'],bi:['biceps','باي','عضلة ذات'],
+ tri:['triceps','تراي','pushdown','ترايسبس'],
+ core:['abs','crunch','plank','بطن','بلانك','معدة'],
+ cardio:['treadmill','bike','elliptical','كارديو','مشي','جري','دراجة','سير','ركض','تريدميل']};
+function matchCode(raw){
+  let t=raw;try{t=decodeURIComponent(t)}catch(e){}
+  const clean=norm(t);
+  const toks=clean.split(' ').filter(w=>w.length>2&&STOP.indexOf(w)<0&&!EQKW[w]&&!/^\d+$/.test(w));
+  if(!toks.length)return null;
+  /* معدات مذكورة في الكود */
+  let wantEq=[];
+  Object.keys(EQKW).forEach(k=>{if(clean.indexOf(k)>-1)wantEq=wantEq.concat(EQKW[k])});
+  const eqBonus=x=>wantEq.length&&x.e.some(r=>wantEq.indexOf(r)>-1)?6:0;
+  /* 1) مطابقة اسم التمرين مباشرة */
+  let best=null,bs=0;
+  EX.forEach(x=>{const hay=norm(x.n+' '+(EN[x.id]||''));
+    let sc=0;toks.forEach(w=>{if(hay.indexOf(w)>-1)sc+=w.length});
+    if(sc>=5)sc+=eqBonus(x);   /* المعدات ترجّح فقط لو الاسم نفسه تطابق */
+    if(sc>bs){bs=sc;best=x}});
+  if(bs>=8)return {ex:best,score:bs};
+  /* أسماء دارجة في الأندية */
+  const ALIAS={'سير':'cardio_m','مشاية':'cardio_m','تريدميل':'cardio_m','دراجة':'cardio_c',
+   'سبينينج':'cardio_c','تجديف':'cardio_r','ستيرماستر':'cardio_s','نط':'cardio_j',
+   'عقلة':'pull','متوازي':'dipc','هاك':'hack','بيك':'pdeck','سكوت':'sq','عقله':'pull'};
+  for(const a in ALIAS){if(clean.indexOf(a)>-1&&exOf(ALIAS[a]))return {ex:exOf(ALIAS[a]),score:9}}
+  /* 2) مطابقة المجموعة العضلية بالكلمات العربية أو الإنجليزية */
+  let bp=null,bpS=0;
+  Object.keys(PKW).forEach(p=>{
+    let sc=0;PKW[p].forEach(w=>{if(clean.indexOf(norm(w))>-1)sc++});
+    if(sc>bpS){bpS=sc;bp=p}});
+  if(bp){
+    const has=r=>S.config&&S.config.eq.indexOf(r)>-1;
+    const pool=EX.filter(x=>x.p===bp).sort((a,b)=>
+      (eqBonus(b)-eqBonus(a))||
+      (b.e.every(has)-a.e.every(has))||
+      ((b.t==='c')-(a.t==='c')));
+    if(pool.length)return {ex:pool[0],score:6+bpS};
+  }
+  return null;
+}
+function guessName(raw){
+  let t=raw;try{t=decodeURIComponent(t)}catch(e){}
+  const seg=t.split(/[\/?#]/).filter(Boolean).pop()||t;
+  const s=seg.replace(/[-_+.]+/g,' ').replace(/\.(html?|php)$/i,'').trim();
+  return /[\u0600-\u06FF]/.test(s)||/[a-z]{3}/i.test(s)?s.slice(0,40):'';
+}
+window.dtToast=function(msg){
+  const d=document.createElement('div');d.id='toast';
+  d.style.cssText='position:fixed;inset-inline:0;bottom:86px;z-index:99;display:flex;justify-content:center;pointer-events:none';
+  d.innerHTML='<div style="background:var(--ink);color:#fff;padding:12px 18px;border-radius:14px;font-size:14px;max-width:88%">'+esc(msg)+'</div>';
+  document.body.appendChild(d);setTimeout(()=>{const e=$('toast');if(e)e.remove()},2600);
+};
+
+/* --- نموذج إضافة تمرين --- */
+let addF=null;
+window.dtAddOpen=function(code,name){
+  addF={n:name||'',p:'chest_h',e:[],t:'c',tip:'',code:code||'',from:!!swapCtx};
+  renderAdd();
+};
+window.dtAddSet=function(k,v){addF[k]=v;renderAdd()};
+window.dtAddTxt=function(k,v){addF[k]=v};
+window.dtAddEq=function(id){addF.e=addF.e.indexOf(id)>-1?addF.e.filter(x=>x!==id):addF.e.concat(id);renderAdd()};
+window.dtAddClose=function(){addF=null;const el=$('addsheet');if(el)el.remove()};
+window.dtAddScan=function(){dtAddClose();dtCam(1)};
+window.dtAddSave=async function(){
+  const nEl=$('axn'),tEl=$('axt'),cEl=$('axc');
+  if(nEl)addF.n=(nEl.value||'').trim();
+  if(tEl)addF.tip=(tEl.value||'').trim();
+  if(cEl)addF.code=(cEl.value||'').trim();
+  if(!addF.n){dtToast('اكتب اسم التمرين أولاً');return}
+  const id='cx'+Date.now().toString(36);
+  const rec={id:id,n:addF.n,p:addF.p,e:addF.e.slice(),t:addF.t,
+    tip:addF.tip||'تمرين مضاف من عندك',en:addF.n};
+  S.cex=(S.cex||[]).concat(rec);
+  EX.push({id:rec.id,n:rec.n,p:rec.p,e:rec.e,t:rec.t,tip:rec.tip});EN[id]=rec.en;
+  if(addF.code)codes()[addF.code]=id;
+  const from=addF.from;
+  addF=null;dtAddClose();await save();
+  dtToast('انضاف: '+rec.n);
+  if(from&&swapCtx)doSwap(id);else render();
+};
+window.dtDelEx=async function(id){
+  S.cex=(S.cex||[]).filter(x=>x.id!==id);
+  const i=EX.findIndex(x=>x.id===id);if(i>-1)EX.splice(i,1);
+  const c=codes();Object.keys(c).forEach(k=>{if(c[k]===id)delete c[k]});
+  await save();render();
+};
+function renderAdd(){
+  let el=$('addsheet');
+  if(!addF){if(el)el.remove();return}
+  if(!el){el=document.createElement('div');el.className='sheet';el.id='addsheet';
+    el.onclick=e=>{if(e.target===el)dtAddClose()};document.body.appendChild(el)}
+  const inp=(id,ph,val)=>'<input id="'+id+'" value="'+esc(val||'')+'" placeholder="'+ph+
+    '" oninput="dtAddTxt(\''+({axn:'n',axt:'tip',axc:'code'}[id])+'\',this.value)" '+
+    'style="width:100%;border:1px solid var(--line);border-radius:var(--r);padding:12px;background:#FAFAF9">';
+  el.innerHTML='<div class="sheet-in"><div class="between"><h3>إضافة تمرين</h3>'+
+    '<button class="linkbtn" onclick="dtAddClose()">إغلاق</button></div>'+
+    '<div class="sec" style="margin-top:12px">اسم التمرين</div>'+inp('axn','مثال: جهاز الضغط الصدري',addF.n)+
+    '<div class="sec">المجموعة العضلية</div><div class="chips">'+
+      Object.keys(PNAME).map(p=>'<button class="chip '+(addF.p===p?'on':'')+'" onclick="dtAddSet(\'p\',\''+p+'\')">'+PNAME[p]+'</button>').join('')+'</div>'+
+    '<div class="muted" style="font-size:13px;margin-top:6px">يستهدف: '+
+      (muOfP(addF.p).map(m=>MN[m]).filter(Boolean).join(' · ')||'—')+'</div>'+
+    '<div class="sec">المعدات المطلوبة</div><div class="chips">'+
+      EQUIP.map(q=>'<button class="chip '+(addF.e.indexOf(q.id)>-1?'on':'')+'" onclick="dtAddEq(\''+q.id+'\')">'+q.n+'</button>').join('')+
+      '</div><div class="muted" style="font-size:13px;margin-top:6px">'+(addF.e.length?'':'بدون معدات = تمرين وزن الجسم')+'</div>'+
+    '<div class="sec">النوع</div><div class="chips">'+
+      '<button class="chip '+(addF.t==='c'?'on':'')+'" onclick="dtAddSet(\'t\',\'c\')">مركّب</button>'+
+      '<button class="chip '+(addF.t==='i'?'on':'')+'" onclick="dtAddSet(\'t\',\'i\')">عزل</button></div>'+
+    '<div class="sec">ملاحظة تكنيك (اختياري)</div>'+inp('axt','مثال: المقبض بمستوى منتصف الصدر',addF.tip)+
+    '<div class="sec">كود الجهاز (اختياري)</div>'+
+    '<div class="row">'+inp('axc','امسحه أو اكتبه',addF.code)+
+      '<button class="btn sm ghost" style="flex:0 0 90px" onclick="dtAddScan()">امسح</button></div>'+
+    '<div class="muted" style="font-size:13px;margin-top:6px">لما تربط الكود، أي مسح له بعدين يفتح هذا التمرين مباشرة.</div>'+
+    '<div class="row" style="margin-top:16px"><button class="btn" onclick="dtAddSave()">احفظ التمرين</button></div>'+
+    '<div style="height:20px"></div></div>';
+}
+
+/* --- إعادة تعريف مسار الكود: يقرأ ويضيف مباشرة --- */
+dtCode=function(code){
+  const v=$('camvid');
+  if(v&&v.videoWidth)camShot={img:shrink(v),h:aHash(v)};
+  const known=codes()[code];
+  dtCloseCam();
+  if(known&&exOf(known)){linkMode=null;dtToast('الجهاز: '+exOf(known).n);doSwap(known);return}
+  const m=matchCode(code);
+  if(m){
+    codes()[code]=m.ex.id;
+    if(camShot){photos()[m.ex.id]=camShot.img;hashes()[m.ex.id]=camShot.h}
+    save();linkMode=null;
+    dtToast('تعرّفنا على: '+m.ex.n);
+    doSwap(m.ex.id);return;
+  }
+  /* كود غير معروف: يفتح نموذج الإضافة جاهز بالاسم والكود */
+  linkMode=null;
+  dtAddOpen(code,guessName(code));
+  dtToast('كود جديد — أكمل بيانات التمرين مرة وحدة');
+};
+window.dtCam=function(fromAdd){
+  camShot=null;
+  const el=document.createElement('div');el.className='sheet';el.id='camsheet';
+  el.onclick=e=>{if(e.target===el)dtCloseCam()};
+  el.innerHTML='<div class="sheet-in"><div class="between"><h3>كاميرا الجهاز</h3>'+
+    '<button class="linkbtn" onclick="dtCloseCam()">إغلاق</button></div>'+
+    '<video id="camvid" autoplay muted playsinline style="width:100%;border-radius:var(--r);background:#000;max-height:46vh;object-fit:cover"></video>'+
+    '<p class="muted" id="cammsg" style="margin:10px 0">جاري فتح الكاميرا…</p>'+
+    (fromAdd?'':'<div class="row"><button class="btn sm" onclick="dtShot()">التقط صورة الجهاز</button>'+
+      '<button class="btn sm ghost" onclick="dtCloseCam();dtAddOpen()">إضافة يدوية</button></div>')+
+    '<div class="sec">أو أدخل الكود يدوياً</div>'+
+    '<div class="row"><input id="camman" placeholder="اكتب الكود المكتوب على الجهاز" '+
+    'style="flex:1;border:1px solid var(--line);border-radius:var(--r);padding:12px;background:#FAFAF9">'+
+    '<button class="btn sm ghost" onclick="dtManual()">تأكيد</button></div>'+
+    '<div style="height:16px"></div></div>';
+  document.body.appendChild(el);
+  startCam();
+};
+async function startCam(){
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}});
+    const v=$('camvid');v.srcObject=camStream;
+    if('BarcodeDetector' in window){
+      const det=new window.BarcodeDetector();
+      camMsg('وجّه الكاميرا على الباركود أو QR الجهاز.');
+      camTimer=setInterval(async()=>{
+        try{const r=await det.detect(v);if(r&&r.length&&r[0].rawValue){
+          clearInterval(camTimer);camTimer=null;dtCode(r[0].rawValue)}}catch(e){}
+      },400);
+    }else camMsg('متصفحك ما يدعم قراءة الباركود. صوّر الجهاز أو أدخل الكود يدوياً.');
+  }catch(e){camMsg('ما قدرنا نفتح الكاميرا. تأكد من السماح للموقع، ولازم الرابط https.')}
+}
+
+/* --- زر الإضافة داخل شاشة البدائل --- */
+const _openSwap3=openSwap;
+openSwap=function(ei,di){
+  _openSwap3(ei,di);
+  const el=$('sheet');if(!el)return;
+  el.innerHTML=el.innerHTML.replace('<div class="sec" style="margin:14px 0 6px">جهاز مشغول أو معطّل؟</div>',
+    '<div class="row" style="margin:0 0 10px"><button class="btn sm ghost" onclick="dtAddOpen()">+ إضافة تمرين يدوياً</button></div>'+
+    '<div class="sec" style="margin:14px 0 6px">جهاز مشغول أو معطّل؟</div>');
+};
+
+/* --- تحميل التمارين المضافة عند التشغيل --- */
+(S.cex||[]).forEach(function(){});
+const _boot=dietBoot;
+dietBoot=async function(){
+  await _boot();
+  (S.cex||[]).forEach(r=>{if(!EX.some(x=>x.id===r.id)){
+    EX.push({id:r.id,n:r.n,p:r.p,e:r.e||[],t:r.t||'c',tip:r.tip||''});EN[r.id]=r.en||r.n}});
+};
+
+/* --- قسم تماريني في الإعدادات --- */
+window.dtMyExSection=function(){
+  const l=S.cex||[];
+  return '<div class="sec">تماريني المضافة ('+l.length+')</div>'+
+    '<div class="card"><div class="row" style="margin-bottom:'+(l.length?'12px':'0')+'">'+
+    '<button class="btn sm ghost" onclick="dtAddOpen()">+ إضافة تمرين</button></div>'+
+    (l.length?l.map(r=>'<div class="exrow"><div><b>'+esc(r.n)+'</b>'+
+      '<div class="muted" style="font-size:12px">'+(PNAME[r.p]||'')+' · '+
+      (r.e&&r.e.length?r.e.map(eqName).join(' + '):'بدون معدات')+'</div></div>'+
+      '<button class="linkbtn" style="color:var(--red)" onclick="dtDelEx(\''+r.id+'\')">حذف</button></div>').join('')
+     :'<p class="muted" style="margin:10px 0 0">أضف أي جهاز في ناديك مو موجود بالقائمة.</p>')+'</div>';
+};
+const _set3=settingsView;
+settingsView=function(){return _set3().replace('<div style="height:30px"></div>','')+
+  safe(dtMyExSection)+'<div style="height:30px"></div>'};
+
 })();
 </script>
 </body>
