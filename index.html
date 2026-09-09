@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>حديد — مدرب التمارين</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="حديد">
+<meta name="theme-color" content="#17202A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --concrete:#ECEDEA;
+  --paper:#FFFFFF;
+  --ink:#17202A;
+  --steel:#5E6871;
+  --line:#D5D7D2;
+  --blue:#0E4FA8;   /* 20kg */
+  --red:#C1121F;    /* 25kg */
+  --yellow:#E8A712;  /* 15kg */
+  --green:#1E7F4F;  /* 10kg */
+  --r:4px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--concrete);color:var(--ink);
+  font-family:'IBM Plex Sans Arabic',system-ui,'Segoe UI',sans-serif;
+  font-size:16px;line-height:1.55;
+  font-variant-numeric:tabular-nums;
+  padding-bottom:96px;
+}
+h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+button{font-family:inherit;font-size:inherit;cursor:pointer}
+input,select{font-family:inherit;font-size:inherit}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px}
+
+/* header */
+header{background:var(--ink);color:#fff;padding:14px 0 0}
+.hd{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.logo{font-weight:700;font-size:20px;letter-spacing:-.03em}
+.logo span{color:var(--yellow)}
+.hd small{color:#9BA6B0;font-size:13px}
+.plates{display:flex;height:5px;margin-top:12px}
+.plates i{flex:1}
+.p-blue{background:var(--blue)}.p-red{background:var(--red)}
+.p-yellow{background:var(--yellow)}.p-green{background:var(--green)}
+
+/* nav */
+nav{position:fixed;bottom:0;right:0;left:0;background:var(--paper);border-top:1px solid var(--line);z-index:40}
+.navin{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav button{background:none;border:0;padding:12px 4px 18px;color:var(--steel);font-size:13px;font-weight:500;border-top:3px solid transparent;margin-top:-1px}
+nav button.on{color:var(--ink);border-top-color:var(--blue);font-weight:700}
+
+/* blocks */
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.sec{margin:24px 0 10px;font-size:14px;font-weight:600;color:var(--steel)}
+.muted{color:var(--steel);font-size:14px}
+.btn{background:var(--ink);color:#fff;border:0;border-radius:var(--r);padding:14px 20px;font-weight:600;width:100%}
+.btn:disabled{background:#A9AFB4}
+.btn.blue{background:var(--blue)}
+.btn.red{background:var(--red)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:9px 14px;width:auto;font-size:14px}
+.row{display:flex;gap:8px;align-items:center}
+.between{display:flex;justify-content:space-between;align-items:center;gap:10px}
+
+/* setup */
+.hero{padding:28px 0 20px}
+.hero h1{font-size:clamp(30px,8vw,44px)}
+.hero p{color:var(--steel);margin:10px 0 0;max-width:56ch}
+.opts{display:grid;gap:8px}
+.opt{display:flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;text-align:right}
+.opt.on{border-color:var(--ink);box-shadow:inset 3px 0 0 var(--blue)}
+.opt b{font-weight:600}
+.opt em{font-style:normal;color:var(--steel);font-size:13px;display:block}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--paper);border-radius:var(--r);padding:10px 13px;font-size:14px;font-weight:500}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.steps{display:flex;gap:6px;margin:16px 0 4px}
+.steps i{height:3px;flex:1;background:var(--line)}
+.steps i.on{background:var(--ink)}
+
+/* day cards */
+.day{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
+.day-top{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.tag{width:6px;align-self:stretch;border-radius:2px}
+.day h3{font-size:17px}
+.day .muted{font-size:13px}
+.exlist{border-top:1px solid var(--line);padding:6px 16px 12px}
+.exrow{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:15px}
+.exrow:last-child{border-bottom:0}
+.exrow span{color:var(--steel);font-size:14px;white-space:nowrap}
+
+/* session */
+.exblock{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px}
+.exhead{padding:13px 15px;border-bottom:1px solid var(--line)}
+.exhead h3{font-size:16px}
+.exhead .muted{font-size:13px;margin-top:2px}
+.sets{padding:6px 10px 12px}
+.setrow{display:grid;grid-template-columns:34px 1fr 1fr 46px;gap:8px;align-items:center;padding:6px 4px}
+.setrow.head{color:var(--steel);font-size:12px;font-weight:600;padding-bottom:2px}
+.setrow input{width:100%;border:1px solid var(--line);border-radius:var(--r);padding:11px 8px;text-align:center;background:#FAFAF9}
+.setrow input:focus{outline:2px solid var(--blue);outline-offset:-1px;background:#fff}
+.setrow.done input{background:#EAF3EA;border-color:#BEDCC6}
+.tick{border:1px solid var(--line);background:var(--paper);border-radius:var(--r);height:42px;font-size:17px;color:var(--steel)}
+.tick.on{background:var(--green);border-color:var(--green);color:#fff}
+.num{font-weight:600;color:var(--steel);text-align:center;font-size:14px}
+.exfoot{display:flex;gap:8px;padding:0 12px 12px}
+.linkbtn{background:none;border:0;color:var(--blue);font-size:14px;font-weight:600;padding:6px 0}
+
+/* timer */
+.timer{position:fixed;bottom:70px;right:0;left:0;z-index:50;pointer-events:none}
+.timer-in{max-width:720px;margin:0 auto;padding:0 16px}
+.timer-bx{background:var(--red);color:#fff;border-radius:var(--r);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;pointer-events:auto}
+.timer-bx b{font-size:26px;font-weight:700;letter-spacing:-.02em}
+.timer-bx button{background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:var(--r);padding:8px 12px;font-weight:600;font-size:14px}
+.hidden{display:none!important}
+
+/* stats */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.stat b{display:block;font-size:26px;font-weight:700;letter-spacing:-.03em}
+.stat em{font-style:normal;color:var(--steel);font-size:13px}
+.bar{height:8px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--blue)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{text-align:right;padding:9px 4px;border-bottom:1px solid var(--line)}
+th{color:var(--steel);font-weight:600;font-size:13px}
+.empty{text-align:center;color:var(--steel);padding:34px 16px}
+/* أنيميشن التمرين */
+.anim{width:118px;height:118px;flex:0 0 118px;background:#F6F6F4;border:1px solid var(--line);border-radius:var(--r)}
+.anim .fig{fill:none;stroke:var(--ink);stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}
+.anim .load{fill:var(--blue)}
+.anim .gr{transform-box:view-box}
+@keyframes kfY{0%,100%{transform:translateY(0)}50%{transform:translateY(15px)}}
+@keyframes kfYup{0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}
+@keyframes kfX{0%,100%{transform:translateX(0)}50%{transform:translateX(16px)}}
+@keyframes kfR{0%,100%{transform:rotate(0)}50%{transform:rotate(-48deg)}}
+@keyframes kfR2{0%,100%{transform:rotate(0)}50%{transform:rotate(46deg)}}
+@keyframes kfSw{0%,100%{transform:rotate(22deg)}50%{transform:rotate(-22deg)}}
+@media(prefers-reduced-motion:reduce){.anim *{animation:none!important}}
+/* خريطة العضلات */
+.figrow{display:flex;gap:14px;align-items:center}
+.map{display:flex;gap:10px;justify-content:center;padding:6px 0}
+.map svg{height:186px}
+.map text{font-size:8px;fill:var(--steel);font-family:inherit}
+.leg{display:flex;gap:16px;justify-content:center;font-size:12px;color:var(--steel);margin-top:4px}
+.leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-left:5px;vertical-align:-1px}
+.mtags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.mtag{font-size:13px;border:1px solid var(--line);border-radius:var(--r);padding:5px 9px}
+.mtag.pri{background:var(--red);color:#fff;border-color:var(--red)}
+/* التكنيك */
+.cue{counter-reset:c;list-style:none;padding:0;margin:6px 0 0}
+.cue li{position:relative;padding:8px 28px 8px 0;border-bottom:1px dashed var(--line);font-size:15px}
+.cue li:last-child{border-bottom:0}
+.cue li:before{counter-increment:c;content:counter(c);position:absolute;right:0;top:9px;width:19px;height:19px;background:var(--blue);color:#fff;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.err{background:#FCF0F1;border-right:3px solid var(--red);padding:10px 12px;border-radius:var(--r);font-size:14px;margin-top:8px}
+.vid{display:block;text-align:center;background:var(--red);color:#fff;text-decoration:none;padding:13px;border-radius:var(--r);font-weight:600;margin-top:16px}
+.timer-bx.work{background:var(--blue)}
+.play{border:1px solid var(--line);background:var(--paper);border-radius:var(--r);height:42px;color:var(--blue);font-weight:700}
+.exname{background:none;border:0;padding:0;font:inherit;font-weight:700;font-size:16px;color:var(--ink);text-align:right;border-bottom:1px dashed var(--steel)}
+.sheet{position:fixed;inset:0;background:rgba(23,32,42,.55);z-index:60;display:flex;align-items:flex-end;justify-content:center}
+.sheet-in{background:var(--paper);width:100%;max-width:720px;max-height:80vh;overflow:auto;border-radius:var(--r) var(--r) 0 0;padding:18px 16px 28px}
+@media(prefers-reduced-motion:no-preference){.timer-bx{transition:background .2s}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="hd">
+      <div class="logo">حديـ<span>د</span></div>
+      <small id="hdInfo"></small>
+    </div>
+    <div class="plates"><i class="p-blue"></i><i class="p-red"></i><i class="p-yellow"></i><i class="p-green"></i></div>
+  </div>
+</header>
+
+<main class="wrap" id="app"></main>
+
+<div class="timer hidden" id="timerBar">
+  <div class="timer-in">
+    <div class="timer-bx">
+      <div><b id="timerVal">01:30</b><div id="timerLbl" style="font-size:13px;opacity:.85">راحة</div></div>
+      <div class="row">
+        <button onclick="addRest(30)">+٣٠ث</button>
+        <button onclick="stopRest()">تخطي</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<nav id="nav" class="hidden">
+  <div class="navin">
+    <button data-t="today" class="on">اليوم</button>
+    <button data-t="program">البرنامج</button>
+    <button data-t="progress">التقدم</button>
+    <button data-t="settings">الإعدادات</button>
+  </div>
+</nav>
+
+<script>
+/* ============ 1. قاعدة البيانات ============ */
+const EQUIP=[
+ {id:'barbell',n:'بار وأوزان'},{id:'rack',n:'قفص سكوات / ستاند'},
+ {id:'dumbbell',n:'دمبلز'},{id:'bench',n:'بنش قابل للتعديل'},
+ {id:'cable',n:'كيبل وبكرات'},{id:'machine_press',n:'أجهزة دفع (صدر/كتف)'},
+ {id:'machine_row',n:'أجهزة سحب (لات/تجديف)'},{id:'leg_machine',n:'أجهزة أرجل (لق برس/كيرل)'},
+ {id:'pullup_bar',n:'عقلة'},{id:'dip_bar',n:'متوازي'},
+ {id:'kettlebell',n:'كتل بل'},{id:'bands',n:'أستك مقاومة'},{id:'cardio',n:'جهاز كارديو'}
+];
+/* p=النمط، e=المعدات المطلوبة، t=c مركب / i عازل */
+const EX=[
+ {id:'bp',n:'بنش برس بار',p:'chest_h',e:['barbell','bench'],t:'c',tip:'الكتف مسحوب للخلف والبار على خط الحلمة'},
+ {id:'dbp',n:'بنش برس دمبل',p:'chest_h',e:['dumbbell','bench'],t:'c',tip:'مدى حركة أطول من البار'},
+ {id:'mchest',n:'جهاز تشيست برس',p:'chest_h',e:['machine_press'],t:'c',tip:'المقبض بمستوى منتصف الصدر'},
+ {id:'dipc',n:'متوازي — ميلة للأمام',p:'chest_h',e:['dip_bar'],t:'c',tip:'مِل بجذعك للأمام لتركيز الصدر'},
+ {id:'pushup',n:'ضغط أرضي',p:'chest_h',e:[],t:'c',tip:'الجسم خط مستقيم، لا تسقّط الحوض'},
+ {id:'bandp',n:'ضغط بالأستك',p:'chest_h',e:['bands'],t:'c',tip:'الأستك خلف الظهر بمستوى الصدر'},
+ {id:'ibp',n:'بنش علوي بار',p:'chest_i',e:['barbell','bench'],t:'c',tip:'ميلة ٣٠ درجة تكفي'},
+ {id:'idbp',n:'بنش علوي دمبل',p:'chest_i',e:['dumbbell','bench'],t:'c',tip:'لا تضرب الدمبلات فوق'},
+ {id:'imach',n:'جهاز صدر علوي',p:'chest_i',e:['machine_press'],t:'c',tip:'ثبّت الظهر على المسند'},
+ {id:'dpush',n:'ضغط والأرجل مرفوعة',p:'chest_i',e:[],t:'c',tip:'ارفع القدمين على كرسي'},
+ {id:'cfly',n:'تفتيح كيبل',p:'chest_f',e:['cable'],t:'i',tip:'قوس بسيط بالكوع وثبّته'},
+ {id:'dfly',n:'تفتيح دمبل',p:'chest_f',e:['dumbbell','bench'],t:'i',tip:'انزل لين تحس بشد الصدر'},
+ {id:'pdeck',n:'جهاز التفتيح (بيك ديك)',p:'chest_f',e:['machine_press'],t:'i',tip:'اعصر ثانية بالأعلى'},
+ {id:'bfly',n:'تفتيح أستك',p:'chest_f',e:['bands'],t:'i',tip:'شد بطيء بالرجوع'},
+ {id:'pull',n:'عقلة',p:'back_v',e:['pullup_bar'],t:'c',tip:'ابدأ من تعليق كامل'},
+ {id:'lat',n:'سحب أمامي (لات)',p:'back_v',e:['machine_row'],t:'c',tip:'اسحب بالمرفق مو باليد'},
+ {id:'clat',n:'سحب أمامي كيبل',p:'back_v',e:['cable'],t:'c',tip:'صدر للأمام وقوس بسيط'},
+ {id:'bpd',n:'سحب أستك للأسفل',p:'back_v',e:['bands'],t:'c',tip:'ثبّت الأستك بمكان عالي'},
+ {id:'bbrow',n:'تجديف بار',p:'back_h',e:['barbell'],t:'c',tip:'ظهر مستقيم وميلة ٤٥ درجة'},
+ {id:'dbrow',n:'تجديف دمبل',p:'back_h',e:['dumbbell'],t:'c',tip:'اسحب للخصر مو للصدر'},
+ {id:'srow',n:'سحب أرضي كيبل',p:'back_h',e:['cable'],t:'c',tip:'لا ترجّح ظهرك'},
+ {id:'mrow',n:'جهاز تجديف',p:'back_h',e:['machine_row'],t:'c',tip:'اعصر لوح الكتف'},
+ {id:'brow',n:'تجديف أستك',p:'back_h',e:['bands'],t:'c',tip:'المرفق قريب من الجسم'},
+ {id:'invrow',n:'تجديف عكسي تحت البار',p:'back_h',e:['pullup_bar'],t:'c',tip:'الجسم مشدود كالبلانك'},
+ {id:'dl',n:'رفعة ميتة',p:'hinge',e:['barbell'],t:'c',tip:'البار ملاصق للساق والظهر محايد'},
+ {id:'rdl',n:'رومانيان ديدلفت بار',p:'hinge',e:['barbell'],t:'c',tip:'ادفع الحوض للخلف والركبة شبه ثابتة'},
+ {id:'drdl',n:'رومانيان دمبل',p:'hinge',e:['dumbbell'],t:'c',tip:'انزل لين تحس بشد الخلفية'},
+ {id:'kbs',n:'سوينق كتل بل',p:'hinge',e:['kettlebell'],t:'c',tip:'الدفع من الحوض مو من الذراع'},
+ {id:'ht',n:'هيب ثرست',p:'hinge',e:['barbell','bench'],t:'c',tip:'اعصر المؤخرة بالأعلى ثانية'},
+ {id:'gb',n:'جسر المؤخرة',p:'hinge',e:[],t:'c',tip:'ذقن للصدر وحوض لأعلى'},
+ {id:'ohp',n:'ضغط كتف بار واقف',p:'shoulder',e:['barbell'],t:'c',tip:'شد البطن ولا تقوّس الظهر'},
+ {id:'dohp',n:'ضغط كتف دمبل',p:'shoulder',e:['dumbbell'],t:'c',tip:'المرفق تحت المعصم'},
+ {id:'mohp',n:'جهاز ضغط كتف',p:'shoulder',e:['machine_press'],t:'c',tip:'ثبّت الظهر كامل'},
+ {id:'kohp',n:'ضغط كتل بل',p:'shoulder',e:['kettlebell'],t:'c',tip:'الرسغ محايد'},
+ {id:'pike',n:'ضغط بايك',p:'shoulder',e:[],t:'c',tip:'حوض عالي والرأس بين اليدين'},
+ {id:'dlat',n:'رفرفة جانبي دمبل',p:'side',e:['dumbbell'],t:'i',tip:'ارفع لمستوى الكتف بس'},
+ {id:'clat2',n:'رفرفة جانبي كيبل',p:'side',e:['cable'],t:'i',tip:'شد ثابت طول الحركة'},
+ {id:'blat',n:'رفرفة أستك',p:'side',e:['bands'],t:'i',tip:'نزول بطيء'},
+ {id:'ur',n:'سحب عالي بار',p:'side',e:['barbell'],t:'i',tip:'قبضة أوسع من الكتف'},
+ {id:'rdf',n:'رفرفة خلفي دمبل',p:'rear',e:['dumbbell'],t:'i',tip:'ميلة للأمام والمرفق شبه مستقيم'},
+ {id:'fp',n:'فيس بول كيبل',p:'rear',e:['cable'],t:'i',tip:'اسحب للوجه والمرفق عالي'},
+ {id:'bpa',n:'فتح أستك أمام الصدر',p:'rear',e:['bands'],t:'i',tip:'اعصر لوح الكتف'},
+ {id:'mrear',n:'جهاز الخلفي',p:'rear',e:['machine_row'],t:'i',tip:'لا تستخدم وزن ثقيل'},
+ {id:'sq',n:'سكوات خلفي',p:'squat',e:['barbell','rack'],t:'c',tip:'انزل لين الفخذ موازي أو أقل'},
+ {id:'fsq',n:'سكوات أمامي',p:'squat',e:['barbell','rack'],t:'c',tip:'المرفق عالي والجذع منتصب'},
+ {id:'gob',n:'جوبلت سكوات',p:'squat',e:['dumbbell'],t:'c',tip:'الدمبل قريب من الصدر'},
+ {id:'lp',n:'لق برس',p:'squat',e:['leg_machine'],t:'c',tip:'لا تقفل الركبة بالأعلى'},
+ {id:'bulg',n:'بلغاري سبليت سكوات',p:'squat',e:['dumbbell','bench'],t:'c',tip:'الوزن على كعب الرجل الأمامية'},
+ {id:'lun',n:'لانجز دمبل',p:'squat',e:['dumbbell'],t:'c',tip:'خطوة واسعة والركبة ما تتجاوز الأصبع'},
+ {id:'kgob',n:'جوبلت سكوات كتل بل',p:'squat',e:['kettlebell'],t:'c',tip:'كعب ثابت بالأرض'},
+ {id:'bwsq',n:'سكوات وزن الجسم',p:'squat',e:[],t:'c',tip:'ثواني نزول بطيئة تزيد الصعوبة'},
+ {id:'le',n:'ليج إكستنشن',p:'quad',e:['leg_machine'],t:'i',tip:'ثبّت ثانية بالأعلى'},
+ {id:'step',n:'ستب أب على البنش',p:'quad',e:['dumbbell','bench'],t:'i',tip:'ادفع بالكعب ولا تقفز'},
+ {id:'sissy',n:'سيسي سكوات',p:'quad',e:[],t:'i',tip:'امسك شي للتوازن'},
+ {id:'lc',n:'ليج كيرل',p:'ham',e:['leg_machine'],t:'i',tip:'نزول بطيء ٣ ثواني'},
+ {id:'dlc',n:'ليج كيرل بدمبل',p:'ham',e:['dumbbell','bench'],t:'i',tip:'ثبّت الدمبل بين القدمين'},
+ {id:'nord',n:'نورديك كيرل',p:'ham',e:[],t:'i',tip:'قاوم النزول قد ما تقدر'},
+ {id:'ckb',n:'ركلة خلفية كيبل',p:'glute',e:['cable'],t:'i',tip:'لا تقوّس أسفل الظهر'},
+ {id:'sup',n:'سوبرمان',p:'glute',e:[],t:'i',tip:'ارفع الصدر والرجل مع بعض'},
+ {id:'scalf',n:'بطات واقف جهاز',p:'calf',e:['leg_machine'],t:'i',tip:'مدى كامل نزول وطلوع'},
+ {id:'dcalf',n:'بطات بدمبل',p:'calf',e:['dumbbell'],t:'i',tip:'وقوف على حافة درجة'},
+ {id:'bwcalf',n:'بطات وزن الجسم',p:'calf',e:[],t:'i',tip:'رجل وحدة يزيد الصعوبة'},
+ {id:'bbc',n:'باي بار',p:'bi',e:['barbell'],t:'i',tip:'المرفق ثابت بجنب الجسم'},
+ {id:'dbc',n:'باي دمبل',p:'bi',e:['dumbbell'],t:'i',tip:'لف الرسغ للخارج بالأعلى'},
+ {id:'ham',n:'هامر كيرل',p:'bi',e:['dumbbell'],t:'i',tip:'قبضة محايدة'},
+ {id:'cc',n:'باي كيبل',p:'bi',e:['cable'],t:'i',tip:'شد ثابت'},
+ {id:'bc2',n:'باي أستك',p:'bi',e:['bands'],t:'i',tip:'رجوع بطيء'},
+ {id:'chin',n:'عقلة قبضة عكسية',p:'bi',e:['pullup_bar'],t:'c',tip:'ممتاز للباي والظهر'},
+ {id:'pd',n:'تراي كيبل (بوش داون)',p:'tri',e:['cable'],t:'i',tip:'المرفق ملاصق للجسم'},
+ {id:'skull',n:'سكل كرشر',p:'tri',e:['barbell','bench'],t:'i',tip:'نزول للجبهة ببطء'},
+ {id:'dext',n:'تراي دمبل خلف الرأس',p:'tri',e:['dumbbell'],t:'i',tip:'مدى كامل للإطالة'},
+ {id:'dipt',n:'متوازي — جذع مستقيم',p:'tri',e:['dip_bar'],t:'c',tip:'خلّ جذعك عمودي'},
+ {id:'bdip',n:'ديب على البنش',p:'tri',e:['bench'],t:'i',tip:'المرفق للخلف مو للجنب'},
+ {id:'cpu',n:'ضغط قبضة ضيقة',p:'tri',e:[],t:'i',tip:'اليدين بعرض الصدر'},
+ {id:'plank',n:'بلانك',p:'core',e:[],t:'i',tip:'شد البطن والمؤخرة'},
+ {id:'hlr',n:'رفع الأرجل بالعقلة',p:'core',e:['pullup_bar'],t:'i',tip:'لا ترجّح جسمك'},
+ {id:'ccr',n:'كرنش كيبل',p:'core',e:['cable'],t:'i',tip:'الحركة من الظهر مو من الحوض'},
+ {id:'lr',n:'رفع الأرجل أرضي',p:'core',e:[],t:'i',tip:'ألصق أسفل الظهر بالأرض'},
+ {id:'rt',n:'تويست روسي',p:'core',e:[],t:'i',tip:'حركة بطيئة ومتحكم فيها'},
+ {id:'twrow',n:'تجديف بمنشفة على عمود',p:'back_h',e:[],t:'c',tip:'ارجع للخلف واسحب جسمك للأمام'},
+ {id:'swim',n:'رفرفة خلفي أرضي (سباحة)',p:'rear',e:[],t:'i',tip:'ارفع الذراعين على شكل Y'},
+ {id:'slfly',n:'تفتيح أرضي بمنشفتين',p:'chest_f',e:[],t:'i',tip:'حرّك اليدين للجنب ببطء'},
+ {id:'isobi',n:'باي بمقاومة اليد الثانية',p:'bi',e:[],t:'i',tip:'قاوم بيدك الحرة طول الحركة'},
+ {id:'cardio_m',n:'كارديو (مشي مائل / دراجة)',p:'cardio',e:['cardio'],t:'i',tip:'نبض ٦٠-٧٠٪ من الأقصى'},
+ {id:'cardio_w',n:'مشي سريع',p:'cardio',e:[],t:'i',tip:'تقدر تتكلم بصعوبة = السرعة صح'},
+ {id:'cardio_b',n:'كارديو وزن الجسم (بيربي)',p:'cardio',e:[],t:'i',tip:'٣٠ثانية شغل / ٣٠ راحة'}
+];
+const PNAME={chest_h:'صدر — دفع أفقي',chest_i:'صدر — دفع علوي',chest_f:'صدر — تفتيح',back_v:'ظهر — سحب عمودي',back_h:'ظهر — سحب أفقي',hinge:'خلفية وظهر سفلي',shoulder:'كتف — ضغط',side:'كتف جانبي',rear:'كتف خلفي',squat:'أرجل — سكوات',quad:'أمامية الفخذ',ham:'خلفية الفخذ',glute:'مؤخرة',calf:'بطات',bi:'باي',tri:'تراي',core:'بطن',cardio:'كارديو'};
+
+/* أسماء إنجليزية لفتح الفيديو الصحيح */
+const EN={bp:'Barbell Bench Press',dbp:'Dumbbell Bench Press',mchest:'Chest Press Machine',dipc:'Chest Dips',pushup:'Push Up',bandp:'Band Chest Press',ibp:'Incline Barbell Press',idbp:'Incline Dumbbell Press',imach:'Incline Chest Press Machine',dpush:'Decline Push Up',cfly:'Cable Fly',dfly:'Dumbbell Fly',pdeck:'Pec Deck',bfly:'Band Chest Fly',pull:'Pull Up',lat:'Lat Pulldown',clat:'Cable Lat Pulldown',bpd:'Band Lat Pulldown',bbrow:'Barbell Row',dbrow:'One Arm Dumbbell Row',srow:'Seated Cable Row',mrow:'Machine Row',brow:'Band Row',invrow:'Inverted Row',dl:'Deadlift',rdl:'Romanian Deadlift',drdl:'Dumbbell Romanian Deadlift',kbs:'Kettlebell Swing',ht:'Barbell Hip Thrust',gb:'Glute Bridge',ohp:'Standing Overhead Press',dohp:'Dumbbell Shoulder Press',mohp:'Shoulder Press Machine',kohp:'Kettlebell Overhead Press',pike:'Pike Push Up',dlat:'Dumbbell Lateral Raise',clat2:'Cable Lateral Raise',blat:'Band Lateral Raise',ur:'Upright Row',rdf:'Dumbbell Rear Delt Fly',fp:'Face Pull',bpa:'Band Pull Apart',mrear:'Reverse Pec Deck',sq:'Back Squat',fsq:'Front Squat',gob:'Goblet Squat',lp:'Leg Press',bulg:'Bulgarian Split Squat',lun:'Dumbbell Lunge',kgob:'Kettlebell Goblet Squat',bwsq:'Bodyweight Squat',le:'Leg Extension',step:'Dumbbell Step Up',sissy:'Sissy Squat',lc:'Leg Curl',dlc:'Dumbbell Leg Curl',nord:'Nordic Hamstring Curl',ckb:'Cable Kickback',sup:'Superman Exercise',scalf:'Standing Calf Raise',dcalf:'Dumbbell Calf Raise',bwcalf:'Bodyweight Calf Raise',bbc:'Barbell Curl',dbc:'Dumbbell Curl',ham:'Hammer Curl',cc:'Cable Curl',bc2:'Band Curl',chin:'Chin Up',pd:'Triceps Pushdown',skull:'Skull Crusher',dext:'Overhead Dumbbell Triceps Extension',dipt:'Triceps Dips',bdip:'Bench Dips',cpu:'Close Grip Push Up',plank:'Plank',hlr:'Hanging Leg Raise',ccr:'Cable Crunch',lr:'Lying Leg Raise',rt:'Russian Twist',twrow:'Towel Row',swim:'Prone Y Raise',slfly:'Sliding Chest Fly',isobi:'Self Resisted Biceps Curl',cardio_m:'Incline Treadmill Walk',cardio_w:'Brisk Walking',cardio_b:'Burpee'};
+/* أسماء العضلات */
+const MN={chest:'الصدر',delt_f:'الكتف الأمامي',delt_s:'الكتف الجانبي',delt_r:'الكتف الخلفي',triceps:'التراي',biceps:'الباي',forearm:'الساعد',abs:'البطن',obliq:'جانبية البطن',lat:'العضلة العريضة',midback:'وسط الظهر',trap:'الترابيس',lower:'أسفل الظهر',quad:'أمامية الفخذ',ham:'خلفية الفخذ',glute:'المؤخرة',calf:'البطات'};
+/* لكل نمط: الحركة، العضلات، التكنيك، الأخطاء */
+const PAT={
+ chest_h:{a:'press_h',m:['chest','delt_f','triceps'],s:['abs'],c:['اسحب لوح الكتف للخلف وثبّته على المقعد','انزل بتحكم لين يلمس أسفل الصدر','ادفع لأعلى مع بقاء المرفق تحت المعصم'],e:['ارتداد البار من على الصدر','فتح المرفق ٩٠ درجة يضغط على الكتف']},
+ chest_i:{a:'press_h',m:['chest','delt_f','triceps'],s:[],c:['ميلة ٣٠ درجة، أكثر من كذا يشتغل كتف','المرفق بزاوية ٤٥ عن الجسم','انزل ببطء ٢-٣ ثواني'],e:['ميلة عالية جداً تنقل الحمل للكتف']},
+ chest_f:{a:'fly',m:['chest'],s:['delt_f'],c:['قوس بسيط بالمرفق وثبّته طول الحركة','افتح لين تحس بشد الصدر بدون ألم','اعصر بالنهاية ثانية كاملة'],e:['ثني ومد المرفق يحوّله لتمرين تراي','وزن ثقيل جداً يضغط على مفصل الكتف']},
+ back_v:{a:'pull_v',m:['lat','biceps'],s:['midback','forearm'],c:['ابدأ من تعليق كامل والكتف مسحوب لأسفل','اسحب بالمرفق باتجاه الخصر','انزل بتحكم بدون ارتخاء مفاجئ'],e:['الترجيح بالجسم لإكمال التكرار','قبضة عريضة جداً تقصّر المدى']},
+ back_h:{a:'pull_h',m:['midback','lat','biceps'],s:['delt_r','lower'],c:['ظهر محايد وميلة ٤٥ درجة','اسحب باتجاه أسفل الصدر أو الخصر','اعصر لوح الكتف قبل الرجوع'],e:['تقويس أسفل الظهر','رفع الكتف لأعلى بدل سحبه للخلف']},
+ hinge:{a:'hinge',m:['ham','glute','lower'],s:['trap','forearm'],c:['ادفع الحوض للخلف والصدر مفتوح','الوزن ملاصق للساق طول الحركة','اقفل الحركة بعصر المؤخرة مو بتقويس الظهر'],e:['تدوير الظهر = أخطر خطأ بهالتمرين','الركبة تنثني كثير فيصير سكوات']},
+ shoulder:{a:'press_v',m:['delt_f','delt_s','triceps'],s:['abs'],c:['شد البطن والمؤخرة لتثبيت الجذع','ادفع لأعلى والرأس يتقدم بسيط بالنهاية','انزل لين مستوى الذقن على الأقل'],e:['تقويس أسفل الظهر تحت الوزن','دفع بالأرجل بدون قصد']},
+ side:{a:'lateral',m:['delt_s'],s:['trap'],c:['ميلة بسيطة للأمام','ارفع لمستوى الكتف بس','انزل ببطء ٣ ثواني'],e:['استخدام الترابيس برفع الكتف','الترجيح بالوزن']},
+ rear:{a:'lateral',m:['delt_r','midback'],s:['trap'],c:['ميلة للأمام والصدر مفتوح','افتح بالمرفق مو باليد','وزن خفيف وتكرارات أعلى'],e:['وزن ثقيل يحوّله لتجديف']},
+ squat:{a:'squat',m:['quad','glute'],s:['ham','abs','lower'],c:['قدم بعرض الكتف والأصابع للخارج بسيط','انزل بين الركبتين لين الفخذ موازي','ادفع بمنتصف القدم والركبة باتجاه الأصابع'],e:['ارتفاع الحوض قبل الصدر بالطلوع','الكعب يرتفع عن الأرض']},
+ quad:{a:'squat',m:['quad'],s:[],c:['ثبّت الحوض على المقعد','مدّ الركبة كامل واعصر ثانية','نزول بطيء ومتحكم'],e:['الترجيح ورفع الحوض عن الكرسي']},
+ ham:{a:'legcurl',m:['ham'],s:['calf','glute'],c:['ثبّت الحوض ولا ترفعه','اسحب الكعب باتجاه المؤخرة','النزول أبطأ من الرفع'],e:['رفع الحوض للمساعدة بالوزن الثقيل']},
+ glute:{a:'hinge',m:['glute'],s:['ham','lower'],c:['ذقن قريب من الصدر والنظر للأمام','ادفع بالكعب','اعصر بالأعلى ثانية كاملة'],e:['تقويس أسفل الظهر بدل عصر المؤخرة']},
+ calf:{a:'calf',m:['calf'],s:[],c:['مدى كامل: نزول تحت مستوى الدرجة','ثبّت بالأعلى ثانية','ركبة شبه مستقيمة'],e:['الارتداد السريع بدون مدى كامل']},
+ bi:{a:'curl',m:['biceps'],s:['forearm'],c:['المرفق ملاصق للجسم وثابت','ارفع بدون تحريك الكتف','انزل كامل لين يمتد الباي'],e:['ترجيح الظهر لرفع الوزن','تقصير المدى بالأعلى والأسفل']},
+ tri:{a:'ext',m:['triceps'],s:['delt_f'],c:['المرفق ثابت بمكانه','مدّ الذراع كامل واعصر','ارجع ببطء لين تحس بالإطالة'],e:['تحريك المرفق للأمام والخلف']},
+ core:{a:'core',m:['abs','obliq'],s:['lower'],c:['شد البطن كأنك تستقبل لكمة','تنفّس بانتظام ولا تحبس نفسك','حركة بطيئة بدون ترجيح'],e:['شد الرقبة بدل البطن','تقويس أسفل الظهر عن الأرض']},
+ cardio:{a:'run',m:['quad','ham','calf'],s:['glute'],c:['ابدأ بـ٣ دقائق إحماء خفيف','ثبّت شدة تقدر تكمل عليها','برّد ٢-٣ دقائق بالنهاية'],e:['الاتكاء على مقابض الجهاز يقلل الحرق']}
+};
+/* تفاصيل خاصة لأهم التمارين */
+const OV={
+ sq:{c:['البار على منتصف الترابيس مو على الرقبة','خذ نفس عميق واحبسه بالنزول','انزل بثبات وادفع بقوة من الأسفل'],e:['الركبة تنطبق للداخل','النزول السريع بدون تحكم']},
+ dl:{c:['البار فوق منتصف القدم قبل البدء','اشحن الظهر: صدر مرفوع وكتف مقفول','ادفع الأرض بأرجلك مو تسحب بظهرك'],e:['تدوير أسفل الظهر','ابتعاد البار عن الساق']},
+ bp:{c:['قبضة أوسع من الكتف بشوي والرسغ مستقيم','القدم ثابتة بالأرض والظهر بقوس طبيعي','انزل لأسفل الصدر وادفع بخط مائل بسيط'],e:['رفع الحوض عن المقعد','ارتداد البار من الصدر']},
+ ohp:{c:['البار على أعلى الصدر بالبداية','ارجع رأسك بسيط ليمر البار','اقفل فوق الرأس مو أمامه'],e:['تقويس الظهر للخلف بشكل مبالغ']},
+ pull:{c:['قبضة أوسع من الكتف بقليل','ابدأ بسحب الكتف لأسفل قبل ثني المرفق','الذقن يتجاوز البار ثم انزل بتحكم'],e:['نصف مدى بالنزول','الترجيح بالأرجل']},
+ bbrow:{c:['ميلة ٤٥ درجة والركبة مثنية بسيط','اسحب للسرة والمرفق قريب','ثبّت الجذع ولا ترتفع مع السحب'],e:['استخدام الظهر السفلي بالترجيح']}
+};
+function muOf(e){const o=PAT[e.slot]||{};return{m:o.m||[],s:o.s||[]};}
+function cueOf(e){const o=OV[e.id]||PAT[e.slot]||{};return{c:o.c||PAT[e.slot]?.c||[],e:o.e||PAT[e.slot]?.e||[]};}
+
+const TPL={
+ 3:[{k:'full',n:'يوم كامل A',c:'blue',s:['squat','chest_h','back_h','shoulder','ham','core','cardio']},
+    {k:'full',n:'يوم كامل B',c:'red',s:['hinge','chest_i','back_v','side','quad','core','cardio']},
+    {k:'full',n:'يوم كامل C',c:'yellow',s:['squat','chest_h','back_h','tri','bi','core','cardio']}],
+ 4:[{k:'up',n:'علوي A',c:'blue',s:['chest_h','back_v','shoulder','back_h','tri','bi','side']},
+    {k:'low',n:'سفلي A',c:'yellow',s:['squat','hinge','quad','ham','calf','core','cardio']},
+    {k:'up',n:'علوي B',c:'red',s:['chest_i','back_h','side','back_v','chest_f','bi','tri']},
+    {k:'low',n:'سفلي B',c:'green',s:['hinge','squat','glute','ham','calf','core','cardio']}],
+ 5:[{k:'push',n:'دفع',c:'blue',s:['chest_h','shoulder','chest_i','side','tri','chest_f','core']},
+    {k:'pull',n:'سحب',c:'red',s:['back_v','back_h','hinge','rear','bi','back_h','core']},
+    {k:'leg',n:'أرجل',c:'yellow',s:['squat','hinge','quad','ham','calf','core','cardio']},
+    {k:'up',n:'علوي',c:'green',s:['chest_i','back_h','shoulder','back_v','bi','tri','side']},
+    {k:'low',n:'سفلي',c:'yellow',s:['hinge','squat','glute','quad','calf','core','cardio']}],
+ 6:[{k:'push',n:'دفع A',c:'blue',s:['chest_h','shoulder','chest_i','side','tri','chest_f','core']},
+    {k:'pull',n:'سحب A',c:'red',s:['back_v','back_h','hinge','rear','bi','back_h','core']},
+    {k:'leg',n:'أرجل A',c:'yellow',s:['squat','hinge','quad','ham','calf','core','cardio']},
+    {k:'push',n:'دفع B',c:'blue',s:['chest_i','shoulder','chest_h','side','tri','chest_f','core']},
+    {k:'pull',n:'سحب B',c:'red',s:['back_h','back_v','rear','hinge','bi','back_h','core']},
+    {k:'leg',n:'أرجل B',c:'yellow',s:['hinge','squat','glute','ham','calf','core','cardio']}]
+};
+const GOALS={
+ fat:{n:'تنشيف ونزول وزن',d:'تكرارات أعلى، راحة أقصر، كارديو مضاف',c:{sets:3,lo:10,hi:12,rest:60},i:{sets:3,lo:12,hi:15,rest:45},cardio:true},
+ mus:{n:'بناء عضل',d:'حِمل أثقل وراحة أطول',c:{sets:4,lo:6,hi:10,rest:100},i:{sets:3,lo:10,hi:12,rest:60},cardio:false},
+ both:{n:'الاثنين معاً (ريكومب)',d:'حِمل متوسط + كارديو خفيف',c:{sets:4,lo:8,hi:10,rest:80},i:{sets:3,lo:12,hi:15,rest:50},cardio:true},
+ str:{n:'قوة',d:'تكرارات قليلة وراحة طويلة',c:{sets:5,lo:4,hi:6,rest:150},i:{sets:3,lo:8,hi:12,rest:70},cardio:false}
+};
+const LEVELS={beg:{n:'مبتدئ',d:'أقل من ٦ أشهر',max:5,inc:1},int:{n:'متوسط',d:'٦ أشهر — سنتين',max:6,inc:1},adv:{n:'متقدم',d:'أكثر من سنتين',max:7,inc:1}};
+
+/* ============ 2. الحالة والتخزين ============ */
+const KEY='gym:state:v1';
+let S={config:null,program:null,logs:{},session:null};
+let tab='today', mem=null;
+
+async function load(){
+  try{const r=await window.storage.get(KEY); if(r&&r.value){S=Object.assign(S,JSON.parse(r.value));return;}}catch(e){}
+  try{const t=localStorage.getItem(KEY); if(t)S=Object.assign(S,JSON.parse(t));}catch(e){}
+}
+async function save(){
+  let ok=false;
+  try{await window.storage.set(KEY,JSON.stringify(S));ok=true;}catch(e){}
+  try{localStorage.setItem(KEY,JSON.stringify(S));ok=true;}catch(e){}
+  return ok;
+}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const exOf=id=>EX.find(x=>x.id===id);
+const today=()=>new Date().toISOString().slice(0,10);
+
+/* ============ 3. توليد البرنامج ============ */
+function avail(eq){return EX.filter(x=>x.e.every(r=>eq.includes(r)));}
+function pick(pool,pattern,used,offset){
+  const c=pool.filter(x=>x.p===pattern&&!used.has(x.id));
+  if(!c.length) return null;
+  return c[offset%c.length];
+}
+function build(cfg){
+  const pool=avail(cfg.eq), g=GOALS[cfg.goal], lvl=LEVELS[cfg.level];
+  const cap=Math.min(lvl.max, cfg.time>=75?7:cfg.time>=60?6:5);
+  const days=TPL[cfg.days].map((d,di)=>{
+    const used=new Set(); const ex=[];
+    for(const slot of d.s){
+      if(slot==='cardio'){ if(!g.cardio||ex.length>=cap+1) continue; }
+      else if(ex.length>=cap) continue;
+      const e=pick(pool,slot,used,di);
+      if(!e) continue;
+      used.add(e.id);
+      if(slot==='cardio'){ ex.push({id:e.id,slot,sets:1,lo:15,hi:20,rest:0,cardio:true}); }
+      else{ const s=e.t==='c'?g.c:g.i; ex.push({id:e.id,slot,sets:s.sets,lo:s.lo,hi:s.hi,rest:s.rest}); }
+    }
+    const minEx=Math.min(4,cap);
+    if(ex.filter(e=>!e.cardio).length<minEx){
+      for(const slot of [...new Set(d.s.filter(s=>s!=='cardio'))]){
+        if(ex.filter(e=>!e.cardio).length>=minEx) break;
+        const alt=pool.filter(x=>x.p===slot&&!used.has(x.id));
+        if(!alt.length) continue;
+        const e=alt[0]; used.add(e.id);
+        const s=e.t==='c'?g.c:g.i;
+        ex.push({id:e.id,slot,sets:s.sets,lo:s.lo,hi:s.hi,rest:s.rest});
+      }
+    }
+    ex.sort((a,b)=>(a.cardio?1:0)-(b.cardio?1:0));
+    return {n:d.n,c:d.c,k:d.k,ex};
+  });
+  return {days,created:today()};
+}
+
+/* ============ 4. الإعداد ============ */
+let draft={goal:'both',level:'int',days:4,time:60,eq:['dumbbell','bench','barbell','rack','cable','machine_press','machine_row','leg_machine','pullup_bar']};
+let step=0;
+function setupView(){
+  const steps=['هدفك','مستواك','أيامك ووقتك','معداتك'];
+  let body='';
+  if(step===0){
+    body=`<div class="opts">${Object.entries(GOALS).map(([k,v])=>
+      `<button class="opt ${draft.goal===k?'on':''}" onclick="dset('goal','${k}')"><div><b>${v.n}</b><em>${v.d}</em></div></button>`).join('')}</div>`;
+  }else if(step===1){
+    body=`<div class="opts">${Object.entries(LEVELS).map(([k,v])=>
+      `<button class="opt ${draft.level===k?'on':''}" onclick="dset('level','${k}')"><div><b>${v.n}</b><em>${v.d}</em></div></button>`).join('')}</div>`;
+  }else if(step===2){
+    body=`<div class="sec">كم يوم بالأسبوع</div>
+      <div class="chips">${[3,4,5,6].map(d=>`<button class="chip ${draft.days===d?'on':''}" onclick="dset('days',${d})">${d} أيام</button>`).join('')}</div>
+      <div class="muted" style="margin-top:8px">${splitName(draft.days)}</div>
+      <div class="sec">مدة الحصة</div>
+      <div class="chips">${[45,60,75,90].map(t=>`<button class="chip ${draft.time===t?'on':''}" onclick="dset('time',${t})">${t} دقيقة</button>`).join('')}</div>`;
+  }else{
+    const n=avail(draft.eq).length;
+    body=`<p class="muted" style="margin-top:0">اختر اللي متوفر عندك فقط. أي تمرين يحتاج معدة غير مختارة ما راح يظهر لك.</p>
+      <div class="chips">${EQUIP.map(e=>`<button class="chip ${draft.eq.includes(e.id)?'on':''}" onclick="dtog('${e.id}')">${e.n}</button>`).join('')}</div>
+      <div class="card" style="margin-top:16px"><div class="between"><span>تمارين متاحة لك</span><b style="font-size:22px">${n}</b></div></div>`;
+  }
+  return `<div class="hero"><h1>ابنِ ناديك،<br>وخلّ البرنامج يجيك جاهز.</h1>
+    <p>أربع خطوات: الهدف، المستوى، الأيام، والمعدات المتوفرة عندك. بعدها يطلع لك برنامج مقسّم بالتفصيل مع أوزان وتكرارات ومتابعة.</p></div>
+    <div class="steps">${steps.map((_,i)=>`<i class="${i<=step?'on':''}"></i>`).join('')}</div>
+    <h2 style="margin:14px 0 12px;font-size:20px">${steps[step]}</h2>
+    ${body}
+    <div class="row" style="margin:20px 0 30px">
+      ${step>0?`<button class="btn ghost" onclick="step--;render()">رجوع</button>`:''}
+      <button class="btn" onclick="${step<3?'step++;render()':'finish()'}">${step<3?'التالي':'أنشئ البرنامج'}</button>
+    </div>`;
+}
+function splitName(d){return {3:'تقسيمة كامل الجسم ٣ أيام',4:'تقسيمة علوي / سفلي',5:'دفع — سحب — أرجل + علوي وسفلي',6:'دفع — سحب — أرجل مرتين بالأسبوع'}[d];}
+function dset(k,v){draft[k]=v;render();}
+function dtog(id){const i=draft.eq.indexOf(id); i<0?draft.eq.push(id):draft.eq.splice(i,1);render();}
+async function finish(){S.config={...draft};S.program=build(S.config);await save();tab='program';render();}
+
+/* ============ 5. اليوم ============ */
+function nextDayIdx(){
+  const done=Object.values(S.logs).filter(l=>l.done).sort((a,b)=>a.ts-b.ts);
+  if(!done.length) return 0;
+  return (done[done.length-1].di+1)%S.program.days.length;
+}
+function todayView(){
+  if(S.session) return sessionView();
+  const di=nextDayIdx(), d=S.program.days[di];
+  const doneToday=Object.values(S.logs).some(l=>l.done&&l.date===today());
+  const wk=weekStats();
+  return `<div class="hero" style="padding:22px 0 14px">
+      <div class="muted">${new Date().toLocaleDateString('ar-SA',{weekday:'long',day:'numeric',month:'long'})}</div>
+      <h1 style="font-size:32px;margin-top:6px">${d.n}</h1>
+      <p style="margin-top:6px">${d.ex.length} تمارين · حوالي ${estTime(d)} دقيقة</p>
+    </div>
+    ${doneToday?'<div class="card" style="border-color:var(--green)"><b>خلّصت تمرين اليوم.</b><div class="muted">تقدر تبدأ الحصة الجاية أو ترتاح.</div></div>':''}
+    <button class="btn blue" onclick="startSession(${di})">ابدأ التمرين</button>
+    <div class="exlist card" style="margin-top:12px;padding:8px 16px 12px">
+      ${d.ex.map(e=>`<div class="exrow"><button class="exname" style="font-size:15px" onclick="openInfo('${e.id}','${e.slot}')">${esc(exOf(e.id).n)}</button><span>${e.cardio?e.lo+'-'+e.hi+' دقيقة':e.sets+'×'+e.lo+'-'+e.hi}</span></div>`).join('')}
+    </div>
+    <div class="sec">هذا الأسبوع</div>
+    <div class="grid2">
+      <div class="stat"><b>${wk.n}</b><em>حصص مكتملة</em><div class="bar"><i style="width:${Math.min(100,wk.n/S.config.days*100)}%"></i></div></div>
+      <div class="stat"><b>${wk.vol.toLocaleString('en')}</b><em>كجم حجم تدريبي</em></div>
+    </div>`;
+}
+function estTime(d){return d.ex.reduce((a,e)=>a+(e.cardio?e.hi:e.sets*(e.rest+40)/60),0)|0;}
+
+/* ============ 6. الحصة ============ */
+function startSession(di){
+  const d=S.program.days[di];
+  S.session={di,date:today(),ts:Date.now(),entries:{}};
+  d.ex.forEach(e=>{S.session.entries[e.id]=Array.from({length:e.sets},()=>({w:'',r:'',ok:false}));});
+  save();render();
+}
+function lastFor(exId){
+  const ls=Object.values(S.logs).filter(l=>l.entries&&l.entries[exId]).sort((a,b)=>b.ts-a.ts);
+  return ls.length?ls[0].entries[exId]:null;
+}
+function suggest(e){
+  const last=lastFor(e.id); if(!last) return null;
+  const sets=last.filter(s=>s.ok&&s.w!==''&&s.r!=='');
+  if(!sets.length) return null;
+  const w=Math.max(...sets.map(s=>+s.w||0));
+  const allTop=sets.length>=e.sets&&sets.every(s=>+s.r>=e.hi);
+  const inc=['squat','hinge','ham','quad','calf','glute'].includes(e.slot)?5:2.5;
+  return {w,next:allTop?w+inc:w,up:allTop};
+}
+function sessionView(){
+  const d=S.program.days[S.session.di];
+  const total=d.ex.reduce((a,e)=>a+e.sets,0);
+  const done=Object.values(S.session.entries).flat().filter(s=>s.ok).length;
+  return `<div style="padding:18px 0 10px">
+      <div class="between"><h1 style="font-size:26px">${d.n}</h1>
+      <button class="linkbtn" onclick="cancelSession()">إلغاء</button></div>
+      <div class="bar" style="margin-top:10px"><i style="width:${Math.round(done/total*100)}%"></i></div>
+      <div class="muted" style="margin-top:5px">${done} من ${total} مجموعة</div>
+    </div>
+    ${d.ex.map((e,ei)=>exBlock(e,ei)).join('')}
+    <button class="btn ${done?'blue':''}" onclick="finishSession()" ${done?'':'disabled'} style="margin:6px 0 30px">إنهاء الحصة وحفظها</button>`;
+}
+function exBlock(e,ei){
+  const x=exOf(e.id), sg=suggest(e), rows=S.session.entries[e.id]||[];
+  const mu=muOf(e), mtags=mu.m.map(m=>MN[m]).join(' · ');
+  if(e.cardio) return `<div class="exblock"><div class="exhead">
+      <div class="figrow" style="gap:10px"><div style="transform:scale(.62);transform-origin:right center;width:74px;flex:0 0 74px">${animSVG(e)}</div>
+      <div style="flex:1"><button class="exname" onclick="openInfo('${e.id}','${e.slot}')">${esc(x.n)}</button>
+      <div class="muted">${e.lo}-${e.hi} دقيقة · ${esc(x.tip)}</div></div></div></div>
+      <div class="sets"><div class="setrow" style="grid-template-columns:1fr 42px 42px">
+      <input type="number" inputmode="numeric" placeholder="الدقائق" value="${rows[0]?.r||''}" onchange="setVal('${e.id}',0,'r',this.value)">
+      <button class="play" onclick="startWork(${e.hi*60},0)" title="عدّاد">▶</button>
+      <button class="tick ${rows[0]?.ok?'on':''}" onclick="tick('${e.id}',0,0)">✓</button></div></div></div>`;
+  return `<div class="exblock">
+    <div class="exhead">
+      <div class="figrow" style="gap:10px">
+        <div style="transform:scale(.62);transform-origin:right center;width:74px;flex:0 0 74px">${animSVG(e)}</div>
+        <div style="flex:1">
+          <div class="between"><button class="exname" onclick="openInfo('${e.id}','${e.slot}')">${esc(x.n)}</button>
+          <button class="linkbtn" onclick="openSwap(${ei})">تبديل</button></div>
+          <div class="muted">${e.sets}×${e.lo}-${e.hi} · راحة ${e.rest}ث</div>
+          <div class="muted" style="font-size:12px">${mtags}</div>
+        </div>
+      </div>
+      ${sg?`<div class="muted" style="margin-top:6px;color:${sg.up?'var(--green)':'var(--steel)'}">آخر مرة ${sg.w} كجم — ${sg.up?'ارفع إلى '+sg.next+' كجم':'كرّر '+sg.next+' كجم'}</div>`:''}
+    </div>
+    <div class="sets">
+      <div class="setrow head"><div>م</div><div>الوزن (كجم)</div><div>التكرار</div><div></div><div></div></div>
+      ${rows.map((s,i)=>`<div class="setrow ${s.ok?'done':''}">
+        <div class="num">${i+1}</div>
+        <input type="number" inputmode="decimal" step="0.5" value="${s.w}" placeholder="${sg?sg.next:'—'}" onchange="setVal('${e.id}',${i},'w',this.value)">
+        <input type="number" inputmode="numeric" value="${s.r}" placeholder="${e.lo}-${e.hi}" onchange="setVal('${e.id}',${i},'r',this.value)">
+        <button class="play" onclick="startWork(${Math.max(20,Math.round(e.hi*3.5))},${e.rest})" title="عدّاد التنفيذ">▶</button>
+        <button class="tick ${s.ok?'on':''}" onclick="tick('${e.id}',${i},${e.rest})">✓</button>
+      </div>`).join('')}
+    </div>
+    <div class="exfoot"><button class="linkbtn" onclick="addSet('${e.id}')">+ مجموعة</button>
+    ${rows.length>1?`<button class="linkbtn" style="color:var(--steel)" onclick="delSet('${e.id}')">− مجموعة</button>`:''}</div>
+  </div>`;
+}
+function setVal(id,i,k,v){S.session.entries[id][i][k]=v;save();}
+function tick(id,i,rest){
+  const s=S.session.entries[id][i]; s.ok=!s.ok;
+  if(s.ok){ if(s.r===''){const e=curEx(id); s.r=e?e.lo:'';} if(s.w===''){const sg=suggest(curEx(id)); if(sg)s.w=sg.next;} if(rest)startRest(rest); }
+  save();render();
+}
+function curEx(id){return S.program.days[S.session.di].ex.find(e=>e.id===id);}
+function addSet(id){S.session.entries[id].push({w:'',r:'',ok:false});save();render();}
+function delSet(id){S.session.entries[id].pop();save();render();}
+function cancelSession(){if(confirm('تلغي الحصة بدون حفظ؟')){S.session=null;stopRest();save();render();}}
+async function finishSession(){
+  const s=S.session, key=s.date+'#'+s.ts;
+  S.logs[key]={date:s.date,ts:s.ts,di:s.di,done:true,entries:s.entries};
+  S.session=null; stopRest(); await save(); tab='progress'; render();
+}
+
+/* ============ 7. مؤقت الراحة ============ */
+let tId=null,tLeft=0,tMode='rest',tThen=0;
+function runTimer(sec,mode,then){
+  tLeft=sec; tMode=mode; tThen=then||0;
+  const bx=document.querySelector('.timer-bx');
+  bx.classList.toggle('work',mode==='work');
+  $('timerLbl').textContent=mode==='work'?'تنفيذ التمرين':'راحة';
+  $('timerBar').classList.remove('hidden'); paintTimer();
+  clearInterval(tId);
+  tId=setInterval(()=>{
+    tLeft--; paintTimer();
+    if(tLeft<=0){ beep();
+      if(tMode==='work'&&tThen){ runTimer(tThen,'rest',0); }
+      else stopRest();
+    }
+  },1000);
+}
+function startWork(sec,rest){runTimer(sec,'work',rest);}
+function startRest(sec){runTimer(sec,'rest',0);}
+function addRest(s){tLeft+=s;paintTimer();}
+function stopRest(){clearInterval(tId);tId=null;$('timerBar').classList.add('hidden');}
+function paintTimer(){const m=Math.max(0,tLeft);$('timerVal').textContent=String(m/60|0).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+function beep(){
+  try{navigator.vibrate&&navigator.vibrate([160,80,160]);
+    const a=new (window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();
+    o.frequency.value=760;o.connect(g);g.connect(a.destination);g.gain.value=.14;o.start();
+    setTimeout(()=>{o.stop();a.close();},260);
+  }catch(e){}
+}
+
+/* ============ 8. البرنامج ============ */
+function programView(){
+  const c=S.config;
+  return `<div style="padding:20px 0 6px"><h1 style="font-size:28px">برنامجك</h1>
+    <p class="muted">${GOALS[c.goal].n} · ${LEVELS[c.level].n} · ${c.days} أيام · ${splitName(c.days)}</p></div>
+  ${S.program.days.map((d,di)=>`<div class="day">
+    <div class="day-top"><div class="tag" style="background:var(--${d.c})"></div>
+      <div style="flex:1"><h3>${d.n}</h3><div class="muted">${d.ex.length} تمارين · ${estTime(d)} دقيقة</div></div>
+      <button class="btn sm ghost" onclick="startSession(${di});tab='today'">ابدأ</button></div>
+    <div class="exlist">${d.ex.map((e,ei)=>`<div class="exrow">
+      <div><button class="exname" style="font-size:15px" onclick="openInfo('${e.id}','${e.slot}')">${esc(exOf(e.id).n)}</button>
+      <div class="muted" style="font-size:12px">${(muOf(e).m.map(m=>MN[m]).join(' · '))||PNAME[e.slot]||''}</div></div>
+      <span>${e.cardio?e.lo+'-'+e.hi+' د':e.sets+'×'+e.lo+'-'+e.hi}<br><button class="linkbtn" style="font-size:12px" onclick="openSwap(${ei},${di})">تبديل</button></span>
+    </div>`).join('')}</div></div>`).join('')}
+  <button class="btn ghost" style="margin:8px 0 30px" onclick="regen()">أعد توليد البرنامج بنفس الإعدادات</button>`;
+}
+async function regen(){S.program=build(S.config);await save();render();}
+
+/* ============ 8.5 الرسوم المتحركة ============ */
+const A={
+ press_h:`<g class="fig"><line x1="24" y1="80" x2="82" y2="80"/><circle cx="90" cy="76" r="7"/><line x1="30" y1="80" x2="20" y2="100"/><line x1="46" y1="80" x2="38" y2="100"/></g>
+  <g class="gr" style="animation:kfY 2.4s ease-in-out infinite"><rect class="load" x="54" y="38" width="38" height="8" rx="4"/><line class="fig" x1="62" y1="46" x2="68" y2="74"/><line class="fig" x1="84" y1="46" x2="78" y2="74"/></g>`,
+ press_v:`<g class="fig"><circle cx="60" cy="34" r="8"/><line x1="60" y1="42" x2="60" y2="78"/><line x1="60" y1="78" x2="48" y2="106"/><line x1="60" y1="78" x2="72" y2="106"/></g>
+  <g class="gr" style="animation:kfY 2.4s ease-in-out infinite"><rect class="load" x="32" y="12" width="56" height="8" rx="4"/><line class="fig" x1="42" y1="20" x2="50" y2="54"/><line class="fig" x1="78" y1="20" x2="70" y2="54"/></g>`,
+ fly:`<g class="fig"><circle cx="60" cy="26" r="8"/><line x1="60" y1="34" x2="60" y2="74"/><line x1="60" y1="74" x2="50" y2="102"/><line x1="60" y1="74" x2="70" y2="102"/></g>
+  <g class="gr" style="animation:kfR2 2.6s ease-in-out infinite;transform-origin:60px 44px"><line class="fig" x1="60" y1="44" x2="26" y2="52"/><circle class="load" cx="24" cy="52" r="7"/></g>
+  <g class="gr" style="animation:kfR 2.6s ease-in-out infinite;transform-origin:60px 44px"><line class="fig" x1="60" y1="44" x2="94" y2="52"/><circle class="load" cx="96" cy="52" r="7"/></g>`,
+ lateral:`<g class="fig"><circle cx="60" cy="26" r="8"/><line x1="60" y1="34" x2="60" y2="74"/><line x1="60" y1="74" x2="50" y2="102"/><line x1="60" y1="74" x2="70" y2="102"/></g>
+  <g class="gr" style="animation:kfR 2.6s ease-in-out infinite;transform-origin:60px 42px"><line class="fig" x1="60" y1="42" x2="34" y2="66"/><circle class="load" cx="32" cy="68" r="7"/></g>
+  <g class="gr" style="animation:kfR2 2.6s ease-in-out infinite;transform-origin:60px 42px"><line class="fig" x1="60" y1="42" x2="86" y2="66"/><circle class="load" cx="88" cy="68" r="7"/></g>`,
+ pull_v:`<rect class="load" x="24" y="16" width="72" height="8" rx="4"/>
+  <g class="gr" style="animation:kfYup 2.8s ease-in-out infinite"><line class="fig" x1="40" y1="24" x2="52" y2="56"/><line class="fig" x1="80" y1="24" x2="68" y2="56"/><circle class="fig" cx="60" cy="50" r="8"/><line class="fig" x1="60" y1="58" x2="60" y2="88"/><line class="fig" x1="60" y1="88" x2="50" y2="110"/><line class="fig" x1="60" y1="88" x2="70" y2="110"/></g>`,
+ pull_h:`<g class="fig"><circle cx="30" cy="42" r="8"/><line x1="38" y1="46" x2="80" y2="58"/><line x1="80" y1="58" x2="84" y2="102"/><line x1="80" y1="58" x2="70" y2="102"/></g>
+  <g class="gr" style="animation:kfX 2.4s ease-in-out infinite"><line class="fig" x1="56" y1="52" x2="52" y2="80"/><rect class="load" x="38" y="80" width="30" height="8" rx="4"/></g>`,
+ curl:`<g class="fig"><circle cx="60" cy="24" r="8"/><line x1="60" y1="32" x2="60" y2="72"/><line x1="60" y1="72" x2="52" y2="102"/><line x1="60" y1="72" x2="68" y2="102"/><line x1="60" y1="40" x2="42" y2="62"/></g>
+  <g class="gr" style="animation:kfR2 2.4s ease-in-out infinite;transform-origin:42px 62px"><line class="fig" x1="42" y1="62" x2="46" y2="88"/><rect class="load" x="34" y="86" width="24" height="8" rx="4"/></g>`,
+ ext:`<g class="fig"><circle cx="60" cy="24" r="8"/><line x1="60" y1="32" x2="60" y2="72"/><line x1="60" y1="72" x2="52" y2="102"/><line x1="60" y1="72" x2="68" y2="102"/><line x1="60" y1="40" x2="46" y2="60"/></g>
+  <g class="gr" style="animation:kfR 2.4s ease-in-out infinite;transform-origin:46px 60px"><line class="fig" x1="46" y1="60" x2="52" y2="86"/><rect class="load" x="40" y="84" width="24" height="8" rx="4"/></g>`,
+ squat:`<rect class="load" x="30" y="26" width="60" height="8" rx="4"/>
+  <g class="gr" style="animation:kfY 2.6s ease-in-out infinite"><circle class="fig" cx="60" cy="18" r="8"/><line class="fig" x1="60" y1="34" x2="60" y2="66"/><line class="fig" x1="60" y1="66" x2="46" y2="86"/><line class="fig" x1="46" y1="86" x2="48" y2="108"/><line class="fig" x1="60" y1="66" x2="74" y2="86"/><line class="fig" x1="74" y1="86" x2="72" y2="108"/></g>`,
+ hinge:`<g class="fig"><line x1="60" y1="70" x2="52" y2="106"/><line x1="60" y1="70" x2="70" y2="106"/></g>
+  <g class="gr" style="animation:kfR2 2.8s ease-in-out infinite;transform-origin:60px 70px"><line class="fig" x1="60" y1="70" x2="60" y2="32"/><circle class="fig" cx="60" cy="24" r="8"/><line class="fig" x1="60" y1="42" x2="60" y2="62"/><rect class="load" x="42" y="60" width="36" height="8" rx="4"/></g>`,
+ calf:`<g class="gr" style="animation:kfYup 2.2s ease-in-out infinite"><circle class="fig" cx="60" cy="26" r="8"/><line class="fig" x1="60" y1="34" x2="60" y2="72"/><line class="fig" x1="60" y1="72" x2="52" y2="100"/><line class="fig" x1="60" y1="72" x2="68" y2="100"/><circle class="load" cx="40" cy="56" r="7"/><circle class="load" cx="80" cy="56" r="7"/></g>
+  <line class="fig" x1="34" y1="108" x2="86" y2="108"/>`,
+ legcurl:`<g class="fig"><circle cx="30" cy="52" r="8"/><line x1="38" y1="56" x2="76" y2="62"/></g>
+  <g class="gr" style="animation:kfR 2.6s ease-in-out infinite;transform-origin:76px 62px"><line class="fig" x1="76" y1="62" x2="80" y2="96"/><circle class="load" cx="82" cy="98" r="7"/></g>`,
+ core:`<g class="fig"><line x1="60" y1="80" x2="88" y2="94"/><line x1="60" y1="80" x2="34" y2="94"/></g>
+  <g class="gr" style="animation:kfR 2.8s ease-in-out infinite;transform-origin:60px 80px"><line class="fig" x1="60" y1="80" x2="60" y2="42"/><circle class="fig" cx="60" cy="34" r="8"/></g>`,
+ run:`<g class="fig"><circle cx="60" cy="26" r="8"/><line x1="60" y1="34" x2="58" y2="70"/></g>
+  <g class="gr" style="animation:kfSw 1s ease-in-out infinite;transform-origin:58px 70px"><line class="fig" x1="58" y1="70" x2="56" y2="104"/></g>
+  <g class="gr" style="animation:kfSw 1s ease-in-out infinite reverse;transform-origin:58px 70px"><line class="fig" x1="58" y1="70" x2="60" y2="104"/></g>
+  <g class="gr" style="animation:kfSw 1s ease-in-out infinite reverse;transform-origin:58px 42px"><line class="fig" x1="58" y1="42" x2="40" y2="60"/></g>`
+};
+function animSVG(e){const k=(OV[e.id]&&OV[e.id].a)||(PAT[e.slot]||{}).a||'core';
+  return `<svg class="anim" viewBox="0 0 120 120" aria-hidden="true">${A[k]||A.core}</svg>`;}
+
+const FRONT=[['trap','polygon','points="40,24 64,24 60,31 44,31"'],['chest','rect','x="36" y="31" width="15" height="17" rx="3"'],['chest','rect','x="53" y="31" width="15" height="17" rx="3"'],
+ ['delt_f','ellipse','cx="32" cy="36" rx="6" ry="8"'],['delt_f','ellipse','cx="72" cy="36" rx="6" ry="8"'],['delt_s','ellipse','cx="24" cy="39" rx="5" ry="7"'],['delt_s','ellipse','cx="80" cy="39" rx="5" ry="7"'],
+ ['biceps','rect','x="21" y="47" width="9" height="19" rx="4"'],['biceps','rect','x="74" y="47" width="9" height="19" rx="4"'],
+ ['forearm','rect','x="18" y="68" width="9" height="22" rx="4"'],['forearm','rect','x="77" y="68" width="9" height="22" rx="4"'],
+ ['abs','rect','x="42" y="50" width="20" height="30" rx="3"'],['obliq','rect','x="34" y="52" width="6" height="26" rx="3"'],['obliq','rect','x="64" y="52" width="6" height="26" rx="3"'],
+ ['quad','rect','x="36" y="86" width="14" height="38" rx="6"'],['quad','rect','x="54" y="86" width="14" height="38" rx="6"'],
+ ['calf','rect','x="38" y="132" width="11" height="28" rx="5"'],['calf','rect','x="55" y="132" width="11" height="28" rx="5"']];
+const BACK=[['trap','polygon','points="40,24 64,24 60,44 44,44"'],['delt_r','ellipse','cx="32" cy="36" rx="6" ry="8"'],['delt_r','ellipse','cx="72" cy="36" rx="6" ry="8"'],
+ ['lat','polygon','points="34,40 44,44 42,66 34,58"'],['lat','polygon','points="70,40 70,58 62,66 60,44"'],['midback','rect','x="45" y="44" width="14" height="18" rx="3"'],
+ ['triceps','rect','x="21" y="47" width="9" height="19" rx="4"'],['triceps','rect','x="74" y="47" width="9" height="19" rx="4"'],
+ ['forearm','rect','x="18" y="68" width="9" height="22" rx="4"'],['forearm','rect','x="77" y="68" width="9" height="22" rx="4"'],
+ ['lower','rect','x="42" y="63" width="20" height="14" rx="3"'],
+ ['glute','rect','x="37" y="79" width="14" height="20" rx="7"'],['glute','rect','x="53" y="79" width="14" height="20" rx="7"'],
+ ['ham','rect','x="36" y="101" width="14" height="32" rx="6"'],['ham','rect','x="54" y="101" width="14" height="32" rx="6"'],
+ ['calf','rect','x="38" y="138" width="11" height="26" rx="5"'],['calf','rect','x="55" y="138" width="11" height="26" rx="5"']];
+function bodySVG(list,label,pri,sec){
+  const col=m=>pri.includes(m)?'#C1121F':sec.includes(m)?'#E9A0A6':'#DADCD7';
+  return `<svg viewBox="0 0 104 200"><circle cx="52" cy="13" r="9" fill="#DADCD7"/>
+   ${list.map(([m,t,at])=>`<${t} ${at} fill="${col(m)}"/>`).join('')}
+   <text x="52" y="196" text-anchor="middle">${label}</text></svg>`;
+}
+function openInfo(exId,slot){
+  const x=exOf(exId); if(!x)return;
+  const e={id:exId,slot:slot||x.p};
+  const mu=muOf(e), cu=cueOf(e);
+  const url='https://www.youtube.com/results?search_query='+encodeURIComponent((EN[exId]||x.n)+' proper form');
+  const el=document.createElement('div'); el.className='sheet'; el.id='sheet';
+  el.onclick=ev=>{if(ev.target===el)closeSheet();};
+  el.innerHTML=`<div class="sheet-in">
+    <div class="between"><h3>${esc(x.n)}</h3><button class="linkbtn" onclick="closeSheet()">إغلاق</button></div>
+    <div class="muted" style="margin-bottom:10px">${esc(EN[exId]||'')}</div>
+    <div class="figrow">${animSVG(e)}
+      <div><div class="mtags">${mu.m.map(m=>`<span class="mtag pri">${MN[m]}</span>`).join('')}${mu.s.map(m=>`<span class="mtag">${MN[m]}</span>`).join('')}</div>
+      <div class="muted" style="margin-top:8px;font-size:13px">${esc(x.tip)}</div></div></div>
+    <div class="sec">العضلات المستهدفة</div>
+    <div class="map">${bodySVG(FRONT,'أمامي',mu.m,mu.s)}${bodySVG(BACK,'خلفي',mu.m,mu.s)}</div>
+    <div class="leg"><span><i style="background:#C1121F"></i>رئيسية</span><span><i style="background:#E9A0A6"></i>مساعدة</span></div>
+    <div class="sec">التكنيك الصحيح</div>
+    <ol class="cue">${cu.c.map(t=>`<li>${esc(t)}</li>`).join('')}</ol>
+    <div class="sec">أخطاء شائعة</div>
+    ${cu.e.map(t=>`<div class="err">${esc(t)}</div>`).join('')}
+    <a class="vid" href="${url}" target="_blank" rel="noopener">شاهد أداء التمرين بالفيديو</a>
+  </div>`;
+  document.body.appendChild(el);
+}
+
+/* ============ 9. التبديل ============ */
+let swapCtx=null;
+function openSwap(ei,di){
+  const dayIdx = di!==undefined?di:(S.session?S.session.di:0);
+  swapCtx={ei,di:dayIdx};
+  const e=S.program.days[dayIdx].ex[ei], pool=avail(S.config.eq).filter(x=>x.p===e.slot);
+  const el=document.createElement('div'); el.className='sheet'; el.id='sheet';
+  el.onclick=ev=>{if(ev.target===el)closeSheet();};
+  el.innerHTML=`<div class="sheet-in"><div class="between"><h3>${PNAME[e.slot]||'بدائل'}</h3>
+    <button class="linkbtn" onclick="closeSheet()">إغلاق</button></div>
+    <p class="muted">بدائل بنفس المجموعة العضلية ومتاحة بمعداتك.</p>
+    <div class="opts">${pool.map(x=>`<button class="opt ${x.id===e.id?'on':''}" onclick="doSwap('${x.id}')">
+      <div><b>${esc(x.n)}</b><em>${esc(x.tip)}</em></div></button>`).join('')||'<div class="empty">ما فيه بدائل بمعداتك الحالية.</div>'}</div></div>`;
+  document.body.appendChild(el);
+}
+function closeSheet(){const el=$('sheet'); if(el)el.remove();}
+async function doSwap(newId){
+  const {ei,di}=swapCtx, e=S.program.days[di].ex[ei];
+  e.id=newId;
+  if(S.session&&S.session.di===di&&!S.session.entries[newId])
+    S.session.entries[newId]=Array.from({length:e.sets},()=>({w:'',r:'',ok:false}));
+  closeSheet(); await save(); render();
+}
+
+/* ============ 10. التقدم ============ */
+function weekStats(){
+  const start=Date.now()-6*864e5;
+  const ls=Object.values(S.logs).filter(l=>l.done&&l.ts>=start);
+  return {n:ls.length,vol:ls.reduce((a,l)=>a+vol(l),0)|0};
+}
+function vol(l){let v=0;for(const k in l.entries)for(const s of l.entries[k])if(s.ok)v+=(+s.w||0)*(+s.r||0);return v;}
+function progressView(){
+  const ls=Object.values(S.logs).filter(l=>l.done).sort((a,b)=>b.ts-a.ts);
+  if(!ls.length) return `<div style="padding:20px 0"><h1 style="font-size:28px">التقدم</h1></div>
+    <div class="card empty">ما سجّلت أي حصة بعد.<br>أول حصة تكمّلها بتظهر هنا مع الحجم التدريبي وأرقامك القياسية.</div>`;
+  const wk=weekStats();
+  const prev=Object.values(S.logs).filter(l=>l.done&&l.ts<Date.now()-6*864e5&&l.ts>=Date.now()-13*864e5);
+  const pv=prev.reduce((a,l)=>a+vol(l),0)|0;
+  const diff=pv?Math.round((wk.vol-pv)/pv*100):null;
+  const prs={};
+  ls.forEach(l=>{for(const k in l.entries)l.entries[k].forEach(s=>{if(s.ok&&+s.w>(prs[k]?.w||0))prs[k]={w:+s.w,r:+s.r||0};});});
+  const top=Object.entries(prs).filter(([k])=>exOf(k)).sort((a,b)=>b[1].w-a[1].w).slice(0,10);
+  return `<div style="padding:20px 0 6px"><h1 style="font-size:28px">التقدم</h1></div>
+    <div class="grid2">
+      <div class="stat"><b>${ls.length}</b><em>إجمالي الحصص</em></div>
+      <div class="stat"><b>${wk.n}/${S.config.days}</b><em>حصص هذا الأسبوع</em></div>
+      <div class="stat"><b>${wk.vol.toLocaleString('en')}</b><em>حجم الأسبوع (كجم)</em></div>
+      <div class="stat"><b style="color:${diff===null?'var(--ink)':diff>=0?'var(--green)':'var(--red)'}">${diff===null?'—':(diff>0?'+':'')+diff+'٪'}</b><em>مقارنة بالأسبوع الماضي</em></div>
+    </div>
+    <div class="sec">أفضل أوزانك</div>
+    <div class="card" style="padding:4px 16px">
+      <table><thead><tr><th>التمرين</th><th>الوزن</th><th>التكرار</th></tr></thead><tbody>
+      ${top.map(([k,v])=>`<tr><td>${esc(exOf(k).n)}</td><td><b>${v.w}</b> كجم</td><td>${v.r}</td></tr>`).join('')}
+      </tbody></table></div>
+    <div class="sec">آخر الحصص</div>
+    <div class="card" style="padding:4px 16px">
+      <table><tbody>${ls.slice(0,12).map(l=>`<tr>
+        <td>${S.program.days[l.di]?.n||'حصة'}</td>
+        <td class="muted">${new Date(l.ts).toLocaleDateString('ar-SA',{day:'numeric',month:'short'})}</td>
+        <td>${vol(l).toLocaleString('en')} كجم</td></tr>`).join('')}</tbody></table></div>
+    <div style="height:30px"></div>`;
+}
+
+/* ============ 11. الإعدادات ============ */
+function settingsView(){
+  const c=S.config;
+  return `<div style="padding:20px 0 6px"><h1 style="font-size:28px">الإعدادات</h1></div>
+    <div class="card">
+      <div class="between"><span class="muted">الهدف</span><b>${GOALS[c.goal].n}</b></div>
+      <div class="between" style="margin-top:8px"><span class="muted">المستوى</span><b>${LEVELS[c.level].n}</b></div>
+      <div class="between" style="margin-top:8px"><span class="muted">الأيام</span><b>${c.days} بالأسبوع</b></div>
+      <div class="between" style="margin-top:8px"><span class="muted">مدة الحصة</span><b>${c.time} دقيقة</b></div>
+      <div class="between" style="margin-top:8px"><span class="muted">المعدات</span><b>${c.eq.length} من ${EQUIP.length}</b></div>
+    </div>
+    <button class="btn ghost" onclick="editSetup()">عدّل الإعدادات وأعد التوليد</button>
+    <div class="sec">البيانات</div>
+    <button class="btn ghost" onclick="exportData()">نسخ بياناتي (JSON)</button>
+    <button class="btn ghost" style="margin-top:8px;color:var(--red);border-color:var(--red)" onclick="wipe()">حذف كل السجلات والبرنامج</button>
+    <p class="muted" style="margin-top:14px">البيانات محفوظة على جهازك داخل التطبيق. هذا البرنامج للاسترشاد فقط — لو عندك إصابة أو حالة صحية راجع مختص قبل البدء.</p>
+    <div style="height:30px"></div>`;
+}
+function editSetup(){draft={...S.config,eq:[...S.config.eq]};step=0;S.program=null;render();}
+async function exportData(){
+  const t=JSON.stringify({config:S.config,logs:S.logs});
+  try{await navigator.clipboard.writeText(t);alert('انتسخت البيانات للحافظة.');}
+  catch(e){prompt('انسخ النص:',t);}
+}
+async function wipe(){
+  if(!confirm('بيتحذف البرنامج وكل السجلات. متأكد؟'))return;
+  S={config:null,program:null,logs:{},session:null};
+  try{await window.storage.delete(KEY);}catch(e){}
+  try{localStorage.removeItem(KEY);}catch(e){}
+  step=0;render();
+}
+
+/* ============ 12. التشغيل ============ */
+function render(){
+  const app=$('app'), nav=$('nav');
+  if(!S.config||!S.program){nav.classList.add('hidden');app.innerHTML=setupView();$('hdInfo').textContent='';window.scrollTo(0,0);return;}
+  nav.classList.remove('hidden');
+  $('hdInfo').textContent=GOALS[S.config.goal].n+' · '+S.config.days+' أيام';
+  app.innerHTML={today:todayView,program:programView,progress:progressView,settings:settingsView}[tab]();
+  [...nav.querySelectorAll('button')].forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+}
+$('nav').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  if(S.session&&b.dataset.t!=='today'&&!confirm('عندك حصة شغالة. تطلع منها؟ (بتنحفظ كمسودة)'))return;
+  tab=b.dataset.t; render(); window.scrollTo(0,0);
+});
+(async()=>{await load(); if(S.config&&!S.program)S.program=build(S.config); render();})();
+</script>
+</body>
+</html>
