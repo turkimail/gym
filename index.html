@@ -1574,8 +1574,10 @@ openSwap=function(ei,di){
     const blocked=o.x.e.filter(r=>has(r)&&busy.indexOf(r)>-1).map(eqName);
     const missing=o.x.e.filter(r=>!has(r)).map(eqName);
     const mus=muOfP(o.x.p).map(m=>MN[m]).filter(Boolean).join(' · ');
-    return '<button class="opt" onclick="doSwap(\''+o.x.id+'\')" style="align-items:flex-start">'+
-      '<div style="flex:1"><b>'+esc(o.x.n)+'</b>'+
+    const ph=(S.photos||{})[o.x.id], cd=Object.keys(S.codes||{}).filter(k=>S.codes[k]===o.x.id);
+    return '<button class="opt" onclick="'+(linkMode?'dtLink':'doSwap')+'(\''+o.x.id+'\')" style="align-items:flex-start">'+
+      (ph?'<img src="'+ph+'" style="width:46px;height:46px;object-fit:cover;border-radius:8px;margin-left:10px">':'')+
+      '<div style="flex:1"><b>'+esc(o.x.n)+'</b>'+(cd.length?' <span style="color:var(--blue);font-size:12px">كود مربوط</span>':'')+
       '<em>'+mus+' · '+lvl(o.s)+' · '+(o.x.t==='c'?'مركّب':'عزل')+'</em>'+
       '<em style="color:var(--steel)">'+need+
       (blocked.length?' — <span style="color:var(--red)">مشغول: '+blocked.join('، ')+'</span>':'')+
@@ -1589,6 +1591,15 @@ openSwap=function(ei,di){
     '<div class="card" style="margin:10px 0"><b>'+esc(cur?cur.n:'')+'</b>'+
     '<div class="muted" style="font-size:13px">يستهدف: '+(muOfP(e.slot).map(m=>MN[m]).filter(Boolean).join(' · ')||'—')+
     '</div><div class="muted" style="font-size:13px">المجموعات والتكرارات ما تتغيّر مع التبديل.</div></div>'+
+    (linkMode?'<div class="err" style="border-right-color:var(--blue);background:#EAF1FB">'+
+      (linkMode.code?'كود جديد: <b>'+esc(linkMode.code)+'</b> — اختر التمرين اللي على الجهاز وبيتربط به.'
+       :'اختر التمرين اللي بالصورة وبيتحفظ شكله للمرة الجاية.')+'</div>'+
+      (linkMode.guess&&exOf(linkMode.guess)?'<div class="card" style="border-color:var(--blue)">'+
+        '<b>يشبه: '+esc(exOf(linkMode.guess).n)+'</b><div class="muted" style="font-size:13px">'+
+        'تطابق الصورة '+Math.round((1-linkMode.dist/64)*100)+'٪</div>'+
+        '<div class="row" style="margin-top:8px"><button class="btn sm" onclick="dtLink(\''+linkMode.guess+
+        '\')">نعم، اختر هذا</button></div></div>':''):
+      '<div class="row" style="margin:10px 0"><button class="btn sm ghost" onclick="dtCam()">امسح كود الجهاز أو صوّره</button></div>')+
     '<div class="sec" style="margin:14px 0 6px">جهاز مشغول أو معطّل؟</div>'+
     '<p class="muted" style="margin:0 0 8px">اضغط على الجهاز عشان يختفي من البدائل مؤقتاً.</p>'+
     '<div class="chips">'+eqUsed.map(r=>'<button class="chip '+(busy.indexOf(r)>-1?'on':'')+
@@ -1605,7 +1616,9 @@ openSwap=function(ei,di){
 const _doSwap=doSwap;
 doSwap=async function(newId){
   const c=swapCtx;if(!c)return;
-  const e=S.program.days[c.di].ex[c.ei], nx=exOf(newId);
+  const nx=exOf(newId);
+  if(!nx){closeSheet();return}          /* حماية: معرّف تمرين غير صالح */
+  const e=S.program.days[c.di].ex[c.ei];
   if(nx&&nx.p)e.slot=nx.p;            /* يحدّث خريطة العضلات والتكنيك للتمرين الجديد */
   await _doSwap(newId);
 };
@@ -1720,6 +1733,131 @@ X('cardio_i','فترات عالية الشدة','cardio',['cardio'],'c','٣٠ ث
 /* سد الفجوة: أنماط بلا بديل منزلي */
 X('twpd','سحب عمودي بمنشفة','back_v',[],'c','لف منشفة على إطار باب متين واسحب لأسفل ببطء','Towel Lat Pulldown');
 X('bottle','رفرفة جانبية بقوارير ماء','side',[],'i','قارورتين ونص لتر وتكرارات عالية','Water Bottle Lateral Raise');
+
+/* ================= كاميرا: باركود الجهاز + التعرّف بالصورة ================= */
+let camStream=null,camTimer=null,camShot=null,linkMode=null;
+const codes=()=>S.codes||(S.codes={});
+const photos=()=>S.photos||(S.photos={});
+const hashes=()=>S.hashes||(S.hashes={});
+
+/* بصمة صورة 8×8 للمقارنة المحلية */
+function aHash(video){
+  const c=document.createElement('canvas');c.width=8;c.height=8;
+  const x=c.getContext('2d');x.drawImage(video,0,0,8,8);
+  const d=x.getImageData(0,0,8,8).data,g=[];
+  for(let i=0;i<64;i++)g.push(.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2]);
+  const m=g.reduce((a,b)=>a+b,0)/64;
+  return g.map(v=>v>m?'1':'0').join('');
+}
+const hdist=(a,b)=>{let n=0;for(let i=0;i<64;i++)if(a[i]!==b[i])n++;return n};
+function shrink(video){
+  const c=document.createElement('canvas'),w=280,
+    h=Math.round(w*(video.videoHeight||480)/(video.videoWidth||640));
+  c.width=w;c.height=h;c.getContext('2d').drawImage(video,0,0,w,h);
+  return c.toDataURL('image/jpeg',.55);
+}
+function camMsg(t){const el=$('cammsg');if(el)el.textContent=t}
+window.dtCloseCam=function(){
+  if(camTimer){clearInterval(camTimer);camTimer=null}
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}
+  const el=$('camsheet');if(el)el.remove();
+};
+window.dtCam=async function(){
+  camShot=null;
+  const el=document.createElement('div');el.className='sheet';el.id='camsheet';
+  el.onclick=e=>{if(e.target===el)dtCloseCam()};
+  el.innerHTML='<div class="sheet-in"><div class="between"><h3>كاميرا الجهاز</h3>'+
+    '<button class="linkbtn" onclick="dtCloseCam()">إغلاق</button></div>'+
+    '<video id="camvid" autoplay muted playsinline style="width:100%;border-radius:var(--r);background:#000;max-height:46vh;object-fit:cover"></video>'+
+    '<p class="muted" id="cammsg" style="margin:10px 0">جاري فتح الكاميرا…</p>'+
+    '<div class="row"><button class="btn sm" onclick="dtShot()">التقط صورة الجهاز</button></div>'+
+    '<div class="sec">أو أدخل الكود يدوياً</div>'+
+    '<div class="row"><input id="camman" placeholder="اكتب الكود المكتوب على الجهاز" '+
+    'style="flex:1;border:1px solid var(--line);border-radius:var(--r);padding:12px;background:#FAFAF9">'+
+    '<button class="btn sm ghost" onclick="dtManual()">تأكيد</button></div>'+
+    '<div style="height:16px"></div></div>';
+  document.body.appendChild(el);
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}});
+    const v=$('camvid');v.srcObject=camStream;
+    if('BarcodeDetector' in window){
+      const det=new window.BarcodeDetector();
+      camMsg('وجّه الكاميرا على الباركود أو QR الجهاز.');
+      camTimer=setInterval(async()=>{
+        try{const r=await det.detect(v);if(r&&r.length){const val=r[0].rawValue;
+          if(val){clearInterval(camTimer);camTimer=null;dtCode(val)}}}catch(e){}
+      },400);
+    }else camMsg('متصفحك ما يدعم قراءة الباركود. صوّر الجهاز أو أدخل الكود يدوياً.');
+  }catch(e){camMsg('ما قدرنا نفتح الكاميرا. تأكد من السماح للموقع، ولازم الرابط يكون https.')}
+};
+window.dtManual=function(){
+  const el=$('camman'),v=(el&&el.value||'').trim();
+  if(v)dtCode(v);else camMsg('اكتب الكود أولاً.');
+};
+function dtCode(code){
+  const v=$('camvid');
+  if(v&&v.videoWidth)camShot={img:shrink(v),h:aHash(v)};
+  const ex=codes()[code];
+  dtCloseCam();
+  if(ex&&exOf(ex)){linkMode=null;doSwap(ex);return}
+  linkMode={code:code,shot:camShot};
+  if(swapCtx)openSwap(swapCtx.ei,swapCtx.di);
+}
+window.dtShot=function(){
+  const v=$('camvid');
+  if(!v||!v.videoWidth){camMsg('الكاميرا لسه ما جهزت.');return}
+  const h=aHash(v),img=shrink(v);
+  camShot={img:img,h:h};
+  /* مطابقة محلية مع الأجهزة المصوّرة سابقاً */
+  let best=null,bd=99;
+  const H=hashes();
+  for(const id in H){const d=hdist(H[id],h);if(d<bd){bd=d;best=id}}
+  dtCloseCam();
+  if(best&&bd<=10&&exOf(best)){
+    linkMode={code:null,shot:camShot,guess:best,dist:bd};
+  }else linkMode={code:null,shot:camShot};
+  if(swapCtx)openSwap(swapCtx.ei,swapCtx.di);
+};
+window.dtLink=async function(exId){
+  const lm=linkMode;linkMode=null;
+  if(lm){
+    if(lm.code)codes()[lm.code]=exId;
+    if(lm.shot){
+      photos()[exId]=lm.shot.img;hashes()[exId]=lm.shot.h;
+      const ks=Object.keys(photos());
+      if(ks.length>30){const drop=ks.slice(0,ks.length-30);
+        drop.forEach(k=>{delete photos()[k];delete hashes()[k]})}
+    }
+    await save();
+  }
+  doSwap(exId);
+};
+window.dtUnlink=async function(exId){
+  const c=codes();Object.keys(c).forEach(k=>{if(c[k]===exId)delete c[k]});
+  delete photos()[exId];delete hashes()[exId];
+  await save();render();
+};
+const _closeSheet2=closeSheet;
+closeSheet=function(){linkMode=null;_closeSheet2()};
+
+/* قسم الأجهزة المربوطة في الإعدادات */
+window.dtGearSection=function(){
+  const c=codes(),ph=photos(),ids={};
+  Object.keys(c).forEach(k=>{(ids[c[k]]=ids[c[k]]||{codes:[]}).codes.push(k)});
+  Object.keys(ph).forEach(id=>{ids[id]=ids[id]||{codes:[]}});
+  const list=Object.keys(ids);
+  if(!list.length)return '<div class="sec">أجهزة النادي</div><div class="card empty">ما ربطت أي جهاز بعد. من شاشة تبديل التمرين اضغط "امسح كود الجهاز أو صوّره".</div>';
+  return '<div class="sec">أجهزة النادي ('+list.length+')</div><div class="card" style="padding:6px 16px 12px">'+
+    list.map(id=>{const e=exOf(id);if(!e)return '';
+      return '<div class="exrow"><div style="display:flex;align-items:center;gap:10px">'+
+        (ph[id]?'<img src="'+ph[id]+'" style="width:42px;height:42px;object-fit:cover;border-radius:8px">':'')+
+        '<div><b>'+esc(e.n)+'</b><div class="muted" style="font-size:12px">'+
+        (ids[id].codes.length?'كود: '+ids[id].codes.map(esc).join('، '):'صورة محفوظة')+'</div></div></div>'+
+        '<button class="linkbtn" style="color:var(--red)" onclick="dtUnlink(\''+id+'\')">حذف</button></div>'}).join('')+'</div>';
+};
+const _set2=settingsView;
+settingsView=function(){return _set2().replace('<div style="height:30px"></div>','')+
+  safe(dtGearSection)+'<div style="height:30px"></div>'};
 
 })();
 </script>
