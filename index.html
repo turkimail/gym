@@ -551,7 +551,7 @@ function exBlock(e,ei){
           <div class="muted" style="font-size:12px">${mtags}</div>
         </div>
       </div>
-      ${sg?`<div class="muted" style="margin-top:6px;color:${sg.up?'var(--green)':'var(--steel)'}">آخر مرة ${sg.w} كجم — ${sg.up?'ارفع إلى '+sg.next+' كجم':'كرّر '+sg.next+' كجم'}</div>`:''}
+      ${sg?`<div class="muted" style="margin-top:6px;color:${sg.color||'var(--steel)'}">${sg.msg||''}</div>`:''}
     </div>
     <div class="sets">
       <div class="setrow head"><div>م</div><div>الوزن (كجم)</div><div>التكرار</div><div></div><div></div></div>
@@ -2252,6 +2252,147 @@ window.dtDelEx=async function(id){
   await _del(id);
   const r=fixProgram();
   if(r.fixed||r.dropped){await save();render()}
+};
+
+/* ================= الأوزان المقترحة والتدرّج ================= */
+/* معامل التمرين = أقصى قوة تقديرية ÷ وزن الجسم (مكافئ بار، ذكر متوسط) */
+const BWM={chest_h:1.0,chest_i:.85,chest_f:.45,back_v:.85,back_h:.9,hinge:1.5,shoulder:.6,
+ side:.15,rear:.12,squat:1.25,quad:.7,ham:.5,glute:1.2,calf:.9,bi:.4,tri:.45,core:.3,cardio:0};
+const EQADJ=[['dumbbell',.45],['kettlebell',.4],['cable',.9],['machine_press',.95],
+ ['machine_row',.95],['leg_machine',1.1],['barbell',1],['bands',0],['bench',1],['rack',1]];
+const LVLF={beg:.7,int:1,adv:1.3};
+function eqAdj(x){
+  if(!x.e.length)return 0;                       /* وزن الجسم */
+  if(x.e.indexOf('bands')>-1&&x.e.length===1)return 0;
+  let a=1,found=false;
+  EQADJ.forEach(p=>{if(!found&&x.e.indexOf(p[0])>-1&&p[0]!=='bench'&&p[0]!=='rack'){a=p[1];found=true}});
+  return found?a:1;
+}
+const rnd25=w=>w<10?Math.round(w*2)/2:w<25?Math.round(w):Math.round(w/2.5)*2.5;
+function startWeight(e){
+  const x=exOf(e.id);if(!x)return 0;
+  const adj=eqAdj(x);if(!adj)return 0;
+  const pf=(S.diet&&S.diet.pf)||{w:80,sex:'m'};
+  const bw=pf.w||80, sexF=pf.sex==='f'?.68:1;
+  const lvl=LVLF[(S.config&&S.config.level)||'int']||1;
+  const oneRM=bw*(BWM[e.slot]||.4)*lvl*sexF*adj;
+  const reps=e.hi||10;
+  const pct=1/(1+reps/30);
+  return rnd25(oneRM*pct*.9);                    /* بداية متحفّظة ١٠٪ */
+}
+function histOf(id,n){
+  return Object.values(S.logs||{})
+    .filter(l=>l.done&&l.entries&&l.entries[id]&&l.entries[id].some(s=>s.ok))
+    .sort((a,b)=>b.ts-a.ts).slice(0,n)
+    .map(l=>l.entries[id].filter(s=>s.ok&&s.w!==''&&s.r!==''));
+}
+function stepOf(slot,w){
+  const lower=['squat','hinge','ham','quad','calf','glute'].indexOf(slot)>-1;
+  const small=['side','rear','bi','tri','core'].indexOf(slot)>-1;
+  if(w<12)return small?1:2.5;
+  if(small)return 2.5;
+  return lower?5:2.5;
+}
+suggest=function(e){
+  const x=exOf(e.id);if(!x||e.cardio)return null;
+  const goal=(S.config&&S.config.goal)||'mus';
+  const bodyOnly=eqAdj(x)===0;
+  const h=histOf(e.id,2);
+  /* أول مرة: وزن بداية محسوب من وزن جسمك ومستواك */
+  if(!h.length){
+    if(bodyOnly)return {w:0,next:'',up:false,first:true,
+      msg:'تمرين وزن جسم — سجّل تكراراتك وبنبني عليها.',color:'var(--steel)'};
+    const s=startWeight(e);
+    const est=(S.diet&&S.diet.pf&&S.diet.pf.set)?'':' (قدّر وزنك في تبويب الأكل عشان يدق أكثر)';
+    return {w:0,next:s,up:false,first:true,
+      msg:'بداية مقترحة: '+s+' كجم لـ'+e.lo+'-'+e.hi+' تكرار. عدّلها لو طلعت سهلة أو صعبة.'+est,
+      color:'var(--blue)'};
+  }
+  const last=h[0], w=Math.max.apply(null,last.map(s=>+s.w||0));
+  const reps=last.map(s=>+s.r||0);
+  const full=last.length>=e.sets;
+  const allTop=full&&reps.every(r=>r>=e.hi);
+  const allTop2=full&&reps.every(r=>r>=e.hi+2);
+  const failed=reps.some(r=>r<e.lo);
+  const failedTwice=failed&&h[1]&&h[1].map(s=>+s.r||0).some(r=>r<e.lo);
+  if(bodyOnly){
+    const tot=reps.reduce((a,b)=>a+b,0);
+    return {w:0,next:'',up:false,
+      msg:allTop?'ممتاز — زد المدى أو أضف مجموعة، أو أبطئ النزول ٣ ثواني.'
+        :'آخر مرة '+tot+' تكرار — هدفك تزيد تكرار أو اثنين.',
+      color:allTop?'var(--green)':'var(--steel)'};
+  }
+  const st=stepOf(e.slot,w);
+  /* تنزيل الحمل بعد فشلين متتاليين */
+  if(failedTwice){
+    const d=rnd25(w*.9);
+    return {w:w,next:d,up:false,deload:true,
+      msg:'آخر مرتين ما وصلت '+e.lo+' تكرار — نزّل إلى '+d+' كجم وابنِ من جديد.',
+      color:'var(--red)'};
+  }
+  /* قواعد التدرّج حسب الهدف */
+  let up=false,next=w,why='';
+  if(goal==='str'){
+    up=allTop;next=up?rnd25(w+st):w;
+    why=up?'كملت '+e.hi+' تكرار في كل المجموعات — ارفع إلى '+next+' كجم.'
+         :'ثبّت '+w+' كجم حتى تكمل '+e.sets+'×'+e.hi+' بأداء نظيف.';
+  }else if(goal==='fat'){
+    up=allTop2;next=up?rnd25(w+st):w;
+    why=up?'تجاوزت المدى بفرق واضح — ارفع إلى '+next+' كجم.'
+         :'في التنشيف الأصل تثبيت '+w+' كجم للحفاظ على العضل، مو زيادة الوزن.';
+  }else{
+    up=allTop;next=up?rnd25(w+st):w;
+    why=up?'كل المجموعات وصلت '+e.hi+' — ارفع إلى '+next+' كجم.'
+         :'ابقَ على '+w+' كجم وزد تكرار في كل مجموعة حتى توصل '+e.hi+'.';
+  }
+  return {w:w,next:next,up:up,msg:'آخر مرة '+w+' كجم × '+reps.join('/')+' — '+why,
+    color:up?'var(--green)':'var(--steel)'};
+};
+
+/* ================= معايرة أوزان البداية (أخف وأأمن) ================= */
+startWeight=function(e){
+  const x=exOf(e.id);if(!x)return 0;
+  const adj=eqAdj(x);if(!adj)return 0;
+  const pf=(S.diet&&S.diet.pf)||{w:80,sex:'m'};
+  const bw=pf.w||80, sexF=pf.sex==='f'?.68:1;
+  const lvl=LVLF[(S.config&&S.config.level)||'int']||1;
+  const oneRM=bw*(BWM[e.slot]||.4)*lvl*sexF*adj;
+  const pct=1/(1+(e.hi||10)/30);
+  /* ٠.٦٨ = بداية متحفّظة عن قصد: أسهل ترفع من تصلح إصابة */
+  return rnd25(oneRM*pct*.68);
+};
+/* توضيح معنى الرقم حسب المعدة */
+function unitHint(x){
+  if(!x||!x.e.length)return '';
+  if(x.e.indexOf('dumbbell')>-1)return ' (دمبل واحد في كل يد)';
+  if(x.e.indexOf('kettlebell')>-1)return ' (كتل بل واحد)';
+  if(x.e.indexOf('barbell')>-1)return ' (شامل وزن البار)';
+  if(x.e.indexOf('cable')>-1||x.e.indexOf('machine_press')>-1||
+     x.e.indexOf('machine_row')>-1||x.e.indexOf('leg_machine')>-1)return ' (رقم رتل الجهاز)';
+  return '';
+}
+const _sug=suggest;
+suggest=function(e){
+  const r=_sug(e);
+  if(!r)return r;
+  const x=exOf(e.id);
+  if(r.first&&r.next){
+    r.msg='بداية مقترحة: '+r.next+' كجم'+unitHint(x)+' لـ'+e.lo+'-'+e.hi+' تكرار. '+
+      'مقصود تكون خفيفة — لو طلعت سهلة البرنامج يرفعها بسرعة في الحصص الجاية.';
+    return r;
+  }
+  /* لحاق سريع: لو الوزن طلع خفيف جداً نقفز خطوتين */
+  const h=histOf(e.id,1);
+  if(h.length&&!r.deload&&r.up){
+    const reps=h[0].map(s=>+s.r||0), w=Math.max.apply(null,h[0].map(s=>+s.w||0));
+    if(reps.length&&reps.every(rr=>rr>=e.hi+3)){
+      const st=stepOf(e.slot,w)*2;
+      r.next=rnd25(w+st);
+      r.msg='آخر مرة '+w+' كجم × '+reps.join('/')+' — كان خفيف عليك، اقفز إلى '+r.next+' كجم'+unitHint(x)+'.';
+      r.color='var(--green)';
+    }
+  }
+  return r;
 };
 
 })();
