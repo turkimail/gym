@@ -1537,6 +1537,79 @@ progressView=function(){return _prog()+safe(dtWeightSection)+'<div style="height
 settingsView=function(){return _set().replace('<div style="height:30px"></div>','')+safe(dtSettingsSection)+
   '<p class="muted" style="font-size:12px;text-align:center;margin:18px 0">الإصدار: تمارين + تغذية · v2</p><div style="height:30px"></div>'};
 
+/* ================= تبديل التمارين حسب العضلة ================= */
+const eqName=id=>{const e=EQUIP.find(x=>x.id===id);return e?e.n:id};
+const muOfP=p=>((PAT[p]||{}).m)||[];
+function muMatch(a,b){
+  const A=muOfP(a),B=muOfP(b);
+  if(!A.length||!B.length)return 0;
+  const inter=A.filter(x=>B.indexOf(x)>-1).length;
+  return inter/Math.max(A.length,B.length);
+}
+const busyList=()=>S.busy||(S.busy=[]);
+window.dtBusy=function(id){
+  const b=busyList();
+  S.busy=b.indexOf(id)>-1?b.filter(x=>x!==id):b.concat(id);
+  save();if(swapCtx)openSwap(swapCtx.ei,swapCtx.di);
+};
+window.dtBusyClear=function(){S.busy=[];save();if(swapCtx)openSwap(swapCtx.ei,swapCtx.di)};
+
+openSwap=function(ei,di){
+  const dayIdx=(di!==undefined&&di!==null)?di:(S.session?S.session.di:0);
+  swapCtx={ei,di:dayIdx};
+  const e=S.program.days[dayIdx].ex[ei], cur=exOf(e.id), busy=busyList();
+  const has=r=>S.config.eq.indexOf(r)>-1, free=r=>busy.indexOf(r)<0;
+  const ready=x=>x.e.every(r=>has(r)&&free(r));
+  const owned=x=>x.e.every(has);
+  const list=EX.filter(x=>x.id!==e.id).map(x=>{
+    const s=(x.p===e.slot)?1:muMatch(x.p,e.slot);
+    return {x,s,ready:ready(x),owned:owned(x)};
+  }).filter(o=>o.s>=.5)
+    .sort((a,b)=>(b.ready-a.ready)||(b.s-a.s)||(b.owned-a.owned)||(a.x.e.length-b.x.e.length));
+  const A=list.filter(o=>o.ready).slice(0,12);
+  const B=list.filter(o=>!o.ready).slice(0,8);
+  const lvl=s=>s===1?'نفس المجموعة تماماً':s>=.75?'بديل ممتاز':'بديل مقبول';
+  const row=o=>{
+    const need=o.x.e.length?o.x.e.map(eqName).join(' + '):'بدون معدات';
+    const blocked=o.x.e.filter(r=>has(r)&&busy.indexOf(r)>-1).map(eqName);
+    const missing=o.x.e.filter(r=>!has(r)).map(eqName);
+    const mus=muOfP(o.x.p).map(m=>MN[m]).filter(Boolean).join(' · ');
+    return '<button class="opt" onclick="doSwap(\''+o.x.id+'\')" style="align-items:flex-start">'+
+      '<div style="flex:1"><b>'+esc(o.x.n)+'</b>'+
+      '<em>'+mus+' · '+lvl(o.s)+' · '+(o.x.t==='c'?'مركّب':'عزل')+'</em>'+
+      '<em style="color:var(--steel)">'+need+
+      (blocked.length?' — <span style="color:var(--red)">مشغول: '+blocked.join('، ')+'</span>':'')+
+      (missing.length?' — <span style="color:var(--red)">ما اخترته بمعداتك</span>':'')+'</em></div></button>';
+  };
+  const eqUsed=[];EX.forEach(x=>x.e.forEach(r=>{if(has(r)&&eqUsed.indexOf(r)<0)eqUsed.push(r)}));
+  const el=document.createElement('div');el.className='sheet';el.id='sheet';
+  el.onclick=ev=>{if(ev.target===el)closeSheet()};
+  el.innerHTML='<div class="sheet-in"><div class="between"><h3>بدائل '+esc(PNAME[e.slot]||'التمرين')+'</h3>'+
+    '<button class="linkbtn" onclick="closeSheet()">إغلاق</button></div>'+
+    '<div class="card" style="margin:10px 0"><b>'+esc(cur?cur.n:'')+'</b>'+
+    '<div class="muted" style="font-size:13px">يستهدف: '+(muOfP(e.slot).map(m=>MN[m]).filter(Boolean).join(' · ')||'—')+
+    '</div><div class="muted" style="font-size:13px">المجموعات والتكرارات ما تتغيّر مع التبديل.</div></div>'+
+    '<div class="sec" style="margin:14px 0 6px">جهاز مشغول أو معطّل؟</div>'+
+    '<p class="muted" style="margin:0 0 8px">اضغط على الجهاز عشان يختفي من البدائل مؤقتاً.</p>'+
+    '<div class="chips">'+eqUsed.map(r=>'<button class="chip '+(busy.indexOf(r)>-1?'on':'')+
+      '" onclick="dtBusy(\''+r+'\')">'+eqName(r)+'</button>').join('')+
+    (busy.length?'<button class="chip" style="color:var(--blue)" onclick="dtBusyClear()">امسح الكل</button>':'')+'</div>'+
+    '<div class="sec">جاهزة الحين ('+A.length+')</div>'+
+    (A.length?'<div class="opts">'+A.map(row).join('')+'</div>'
+      :'<div class="empty">كل البدائل تحتاج معدات مشغولة أو غير مختارة. جرّب امسح المشغول.</div>')+
+    (B.length?'<div class="sec">تحتاج معدة ثانية</div><div class="opts">'+B.map(row).join('')+'</div>':'')+
+    '<div style="height:20px"></div></div>';
+  document.body.appendChild(el);
+};
+
+const _doSwap=doSwap;
+doSwap=async function(newId){
+  const c=swapCtx;if(!c)return;
+  const e=S.program.days[c.di].ex[c.ei], nx=exOf(newId);
+  if(nx&&nx.p)e.slot=nx.p;            /* يحدّث خريطة العضلات والتكنيك للتمرين الجديد */
+  await _doSwap(newId);
+};
+
 })();
 </script>
 </body>
