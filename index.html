@@ -1041,6 +1041,13 @@ window.dtRmC=i=>{D().custom.splice(i,1);save();render()};
 window.dtDel=id=>{const d=D();d.lib=d.lib.filter(r=>r.id!==id);save();render()};
 window.dtPut=(slot,id)=>{dSet(slot,{id:id,mods:[],custom:null});dSub='day';render();window.scrollTo(0,0)};
 window.dtPF=(k,v)=>{const pf=D().pf;pf[k]=(k==='age'||k==='w'||k==='h')?(+v||0):v;pf.set=1;save();render()};
+/* أثناء الكتابة: خزّن الرقم بدون إعادة بناء الصفحة حتى لا يقفل الكيبورد */
+window.dtPFq=(k,v)=>{const pf=D().pf;if(v==='')return;pf[k]=+v||pf[k];pf.set=1;};
+window.dtPFc=()=>{const pf=D().pf;
+  pf.age=Math.min(90,Math.max(14,pf.age||30));
+  pf.w=Math.min(250,Math.max(35,pf.w||80));
+  pf.h=Math.min(230,Math.max(120,pf.h||170));
+  save();render();};
 window.dtSaveP=()=>{D().pf.set=1;save();render()};
 
 /* ---- الوزن ---- */
@@ -1168,7 +1175,9 @@ function renderSheet(){
 /* ---- شاشة الأكل ---- */
 function pfForm(){
   const pf=D().pf, n=(k,l,u)=>'<div style="flex:1"><div class="muted" style="font-size:13px">'+l+'</div>'+
-    '<div class="row"><input type="number" value="'+pf[k]+'" oninput="dtPF(\''+k+'\',this.value)" style="width:100%;border:1px solid var(--line);border-radius:var(--r);padding:10px;text-align:center;background:#FAFAF9"><span class="muted">'+u+'</span></div></div>';
+    '<div class="row"><input type="number" inputmode="decimal" step="'+(k==='w'?'0.1':'1')+'" value="'+pf[k]+'" '+
+    'oninput="dtPFq(\''+k+'\',this.value)" onblur="dtPFc()" onchange="dtPFc()" '+
+    'style="width:100%;border:1px solid var(--line);border-radius:var(--r);padding:10px;text-align:center;background:#FAFAF9"><span class="muted">'+u+'</span></div></div>';
   return '<div class="chips" style="margin-bottom:10px">'+
     [['m','ذكر'],['f','أنثى']].map(x=>'<button class="chip '+(pf.sex===x[0]?'on':'')+'" onclick="dtPF(\'sex\',\''+x[0]+'\')">'+x[1]+'</button>').join('')+'</div>'+
     '<div class="row">'+n('age','العمر','سنة')+n('w','الوزن','كجم')+n('h','الطول','سم')+'</div>'+
